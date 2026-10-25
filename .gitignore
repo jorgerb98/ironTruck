@@ -1,0 +1,10 @@
+# Ejecutables y herramientas locales
+cloudflared.exe
+generate-icons.ps1
+
+# Scripts locales del servidor
+server.ps1
+
+# Sistema
+Thumbs.db
+.DS_Store

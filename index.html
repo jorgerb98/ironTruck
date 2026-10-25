@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>IronTrack - Gym, Meals & Records</title>
+  <meta name="theme-color" content="#090514">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="IronTrack">
+
+  <!-- Tailwind CSS & Lucide Icons & Chart.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#faf5ff',
+              100: '#f3e8ff',
+              200: '#e9d5ff',
+              300: '#d8b4fe',
+              400: '#c084fc',
+              500: '#a855f7',
+              600: '#9333ea',
+              700: '#7e22ce',
+              800: '#6b21a8',
+              900: '#581c87',
+              accent: '#ec4899',
+              darkbg: '#07040d',
+              cardbg: '#110a1f',
+              border: '#2a1645'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#07040d] text-purple-100 min-h-screen flex flex-col font-sans select-none antialiased pb-20">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-[#0d071a]/90 backdrop-blur-md border-b border-[#24133b] px-4 py-3 flex items-center justify-between shadow-lg shadow-purple-950/20">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-700 via-purple-600 to-fuchsia-500 flex items-center justify-center font-black text-white shadow-md shadow-purple-900/50 text-sm">
+        IT
+      </div>
+      <div>
+        <h1 class="text-base font-extrabold tracking-tight bg-gradient-to-r from-purple-200 via-purple-100 to-fuchsia-300 bg-clip-text text-transparent">IronTrack</h1>
+        <p class="text-[10px] text-purple-300/70 font-medium" id="header-user-status">Cargando...</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button id="btn-open-profile-quick" data-target="tab-profile" class="p-2 rounded-xl bg-[#170e28] hover:bg-[#23143d] border border-[#2e194a] text-purple-300 transition" title="Ver Perfil y Metas">
+        <i data-lucide="user" class="w-4 h-4"></i>
+      </button>
+      <button id="btn-export-data" title="Copia de seguridad" class="p-2 rounded-xl bg-[#170e28] hover:bg-[#23143d] border border-[#2e194a] text-purple-300 transition">
+        <i data-lucide="download" class="w-4 h-4"></i>
+      </button>
+      <label for="import-file-input" title="Restaurar copia" class="p-2 rounded-xl bg-[#170e28] hover:bg-[#23143d] border border-[#2e194a] text-purple-300 transition cursor-pointer">
+        <i data-lucide="upload" class="w-4 h-4"></i>
+      </label>
+      <input type="file" id="import-file-input" accept=".json" class="hidden">
+    </div>
+  </header>
+
+  <!-- MAIN VIEW CONTAINER -->
+  <main class="flex-1 w-full max-w-lg mx-auto p-4 overflow-y-auto">
+
+    <!-- 1. TAB: CALENDARIO DE ENTRENAMIENTOS -->
+    <section id="tab-calendar" class="tab-content space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+            <span>Calendario de Entrenos</span>
+            <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
+          </h2>
+          <p class="text-xs text-purple-300/70">Pulsa cualquier día para ver o registrar la sesión</p>
+        </div>
+        <button id="btn-quick-new-workout" class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-xs font-bold text-white shadow-md shadow-purple-900/40">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>Entrenar hoy</span>
+        </button>
+      </div>
+
+      <!-- Calendar Container Card -->
+      <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <button id="btn-prev-month" class="p-1.5 rounded-xl bg-[#1a0f30] hover:bg-[#251545] border border-[#301952] text-purple-300 transition">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <div class="text-center">
+            <h3 id="calendar-month-year" class="text-sm font-bold text-white capitalize tracking-wide">Mes Año</h3>
+            <p id="calendar-stats-summary" class="text-[10px] text-fuchsia-400 font-semibold">0 entrenos este mes</p>
+          </div>
+          <button id="btn-next-month" class="p-1.5 rounded-xl bg-[#1a0f30] hover:bg-[#251545] border border-[#301952] text-purple-300 transition">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-purple-400/80 uppercase mb-2">
+          <span>Lun</span>
+          <span>Mar</span>
+          <span>Mié</span>
+          <span>Jue</span>
+          <span>Vie</span>
+          <span>Sáb</span>
+          <span>Dom</span>
+        </div>
+
+        <div id="calendar-days-grid" class="grid grid-cols-7 gap-1.5">
+          <!-- Filled dynamically by JS -->
+        </div>
+
+        <div class="flex items-center justify-center space-x-4 pt-3 mt-3 border-t border-[#23123b] text-[11px] text-purple-300/70">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_6px_#a855f7]"></span>
+            <span>Día entrenado</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-2.5 h-2.5 rounded-full border border-pink-500"></span>
+            <span>Hoy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected Day Details & Sessions List -->
+      <div id="calendar-day-details" class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-[#23123b] pb-2.5">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-fuchsia-400">Detalle del Día</span>
+            <h3 id="selected-date-title" class="text-sm font-bold text-white capitalize">Fecha seleccionada</h3>
+          </div>
+          <button id="btn-add-workout-on-selected-date" class="px-3 py-1.5 rounded-xl bg-purple-700/80 hover:bg-purple-600 text-purple-100 text-xs font-semibold flex items-center space-x-1 border border-purple-500/30">
+            <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i>
+            <span>Registrar entreno aquí</span>
+          </button>
+        </div>
+
+        <div id="selected-day-workouts-list" class="space-y-2">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TAB: NUTRICIÓN Y SEGUIMIENTO DE COMIDAS -->
+    <section id="tab-nutrition" class="tab-content hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+            <span>Nutrición & Kcal</span>
+            <span class="w-2 h-2 rounded-full bg-fuchsia-500 shadow-[0_0_8px_#ec4899]"></span>
+          </h2>
+          <p class="text-xs text-purple-300/70">Control de calorías, macronutrientes y peso meta</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <input type="date" id="nutrition-view-date" class="bg-[#170e28] border border-[#321a52] rounded-xl px-2.5 py-1 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+        </div>
+      </div>
+
+      <!-- Daily Calories Summary Card -->
+      <div class="bg-gradient-to-br from-[#110a1f] via-[#160d2b] to-[#200f38] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-purple-400">Plan Nutricional Calculado</span>
+            <h3 id="nutrition-goal-badge" class="text-sm font-extrabold text-white flex items-center space-x-1.5">
+              <span>Superávit Calórico</span>
+              <span class="text-[11px] text-fuchsia-400 font-normal">(Meta: 82.0 kg)</span>
+            </h3>
+          </div>
+          <button id="btn-recalc-target-modal" class="px-2.5 py-1 rounded-xl bg-[#20103b] hover:bg-[#2d1652] border border-[#3d1a6b] text-[11px] text-purple-300 font-semibold flex items-center space-x-1">
+            <i data-lucide="calculator" class="w-3.5 h-3.5 text-fuchsia-400"></i>
+            <span>Ajustar Metas</span>
+          </button>
+        </div>
+
+        <div class="bg-[#0e071c] p-3.5 rounded-2xl border border-[#26133f] space-y-2">
+          <div class="flex justify-between items-baseline">
+            <div>
+              <p class="text-[10px] text-purple-400/80 uppercase font-semibold">Consumidas</p>
+              <p class="text-2xl font-black text-white tracking-tight"><span id="diet-consumed-kcal">0</span> <span class="text-xs font-normal text-purple-400">kcal</span></p>
+            </div>
+            <div class="text-center">
+              <p class="text-[10px] text-purple-400/80 uppercase font-semibold">Restantes</p>
+              <p class="text-xl font-extrabold text-fuchsia-400 tracking-tight" id="diet-remaining-kcal">0</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] text-purple-400/80 uppercase font-semibold">Objetivo</p>
+              <p class="text-base font-bold text-purple-300" id="diet-target-kcal">2,650</p>
+            </div>
+          </div>
+
+          <div class="w-full bg-[#1b1030] rounded-full h-3 overflow-hidden p-0.5 border border-[#351859]">
+            <div id="diet-kcal-progress-bar" class="bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 h-full rounded-full transition-all duration-500 shadow-[0_0_10px_#ec4899]" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+          <div class="bg-[#150c26] p-2.5 rounded-2xl border border-[#2b1649]">
+            <span class="text-[10px] text-purple-400/80 font-bold block">Proteína</span>
+            <p class="font-extrabold text-white text-sm my-0.5"><span id="macro-prot-consumed">0</span> <span class="text-[10px] text-purple-400 font-normal">/ <span id="macro-prot-target">160</span>g</span></p>
+            <div class="w-full bg-[#201138] rounded-full h-1.5 overflow-hidden mt-1">
+              <div id="macro-prot-bar" class="bg-purple-400 h-full rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="bg-[#150c26] p-2.5 rounded-2xl border border-[#2b1649]">
+            <span class="text-[10px] text-purple-400/80 font-bold block">Carbohidratos</span>
+            <p class="font-extrabold text-white text-sm my-0.5"><span id="macro-carbs-consumed">0</span> <span class="text-[10px] text-purple-400 font-normal">/ <span id="macro-carbs-target">320</span>g</span></p>
+            <div class="w-full bg-[#201138] rounded-full h-1.5 overflow-hidden mt-1">
+              <div id="macro-carbs-bar" class="bg-fuchsia-400 h-full rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="bg-[#150c26] p-2.5 rounded-2xl border border-[#2b1649]">
+            <span class="text-[10px] text-purple-400/80 font-bold block">Grasas</span>
+            <p class="font-extrabold text-white text-sm my-0.5"><span id="macro-fat-consumed">0</span> <span class="text-[10px] text-purple-400 font-normal">/ <span id="macro-fat-target">70</span>g</span></p>
+            <div class="w-full bg-[#201138] rounded-full h-1.5 overflow-hidden mt-1">
+              <div id="macro-fat-bar" class="bg-pink-400 h-full rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btn-open-food-search-modal" class="py-2.5 px-3 rounded-2xl bg-[#170e28] hover:bg-[#23143d] border border-[#2e184c] text-xs font-bold text-white flex items-center justify-center space-x-1.5 transition">
+          <i data-lucide="utensils" class="w-4 h-4 text-fuchsia-400"></i>
+          <span>Buscar Alimento</span>
+        </button>
+        <button id="btn-open-quick-calorie-modal" class="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-xs font-bold text-white flex items-center justify-center space-x-1.5 shadow-md shadow-purple-950 transition">
+          <i data-lucide="zap" class="w-4 h-4"></i>
+          <span>Calorías Directas</span>
+        </button>
+      </div>
+
+      <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-[#23123b] pb-2">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Comidas Registradas del Día</h3>
+          <span id="meals-count-badge" class="text-[11px] text-purple-300/70">0 registros</span>
+        </div>
+        <div id="today-meals-list" class="space-y-2">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. TAB: SESIÓN / ENTRENAR -->
+    <section id="tab-workout" class="tab-content hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Registro de Sesión</h2>
+          <p class="text-xs text-purple-300/70">Anota tus series, pesos y reps de hoy</p>
+        </div>
+        <button id="btn-quick-timer" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#180e2a] border border-[#37195c] text-xs text-purple-300 font-semibold shadow hover:bg-[#23133d]">
+          <i data-lucide="timer" class="w-3.5 h-3.5 text-fuchsia-400"></i>
+          <span id="timer-display">Descanso: 90s</span>
+        </button>
+      </div>
+
+      <!-- Quick Session Details Form -->
+      <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl p-4 shadow-lg space-y-3">
+        <!-- Selector de Rutinas Plantilla Guardadas -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider">Cargar Rutina Predefinida</label>
+            <button id="btn-open-create-routine-modal" class="text-[10px] text-fuchsia-400 hover:text-fuchsia-300 font-bold flex items-center space-x-1">
+              <i data-lucide="plus" class="w-3 h-3"></i>
+              <span>Crear Rutina Completa</span>
+            </button>
+          </div>
+          <div class="flex items-center space-x-2">
+            <select id="workout-routine-preset" class="flex-1 bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+              <option value="">-- Elige una rutina para cargar sus ejercicios --</option>
+              <!-- Filled with routines -->
+            </select>
+            <button id="btn-load-routine-preset" class="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-md">
+              Cargar
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 pt-2 border-t border-[#23123b]">
+          <div class="flex-1">
+            <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1">Fecha</label>
+            <input type="date" id="workout-date" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          </div>
+          <div class="flex-1">
+            <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1">Nombre Sesión</label>
+            <input type="text" id="workout-tag" placeholder="Ej: Día 1 - Torso" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          </div>
+        </div>
+      </div>
+
+      <div id="workout-exercises-container" class="space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <button id="btn-open-exercise-picker" class="w-full py-3.5 px-4 rounded-xl border border-dashed border-[#3e1f6e] bg-[#140b24]/50 hover:bg-[#1f1038] text-purple-300 font-semibold flex items-center justify-center space-x-2 transition">
+        <i data-lucide="plus-circle" class="w-5 h-5 text-fuchsia-400"></i>
+        <span>Añadir Ejercicio Individual</span>
+      </button>
+
+      <button id="btn-save-workout" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-purple-700 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold shadow-lg shadow-purple-900/40 flex items-center justify-center space-x-2 transition active:scale-[0.98]">
+        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+        <span>Guardar Sesión Completada</span>
+      </button>
+    </section>
+
+    <!-- 4. TAB: HISTORIAL Y MARCAS -->
+    <section id="tab-history" class="tab-content hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Historial de Entrenamientos</h2>
+          <p class="text-xs text-purple-300/70">Consulta tus sesiones pasadas y marcas obtenidas</p>
+        </div>
+      </div>
+
+      <div class="relative">
+        <input type="text" id="history-search" placeholder="Filtrar por ejercicio o rutina..." class="w-full bg-[#110a1f] border border-[#2a1645] rounded-xl pl-9 pr-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+        <i data-lucide="search" class="w-4 h-4 text-purple-400 absolute left-3 top-2.5"></i>
+      </div>
+
+      <div class="bg-gradient-to-br from-[#110a1f] via-[#160d2b] to-[#1f0f3d] border border-[#2a1645] rounded-2xl p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="p-1.5 rounded-lg bg-fuchsia-500/10 text-fuchsia-400">
+              <i data-lucide="trophy" class="w-4 h-4"></i>
+            </span>
+            <h3 class="text-sm font-bold text-white">Mejores Marcas (PRs)</h3>
+          </div>
+          <span class="text-[11px] text-purple-300/70" id="pr-count">0 récords</span>
+        </div>
+        <div id="prs-list" class="grid grid-cols-2 gap-2 text-xs">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+
+      <div id="history-list" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- 5. TAB: GRÁFICOS Y MÉTRICAS -->
+    <section id="tab-charts" class="tab-content hidden space-y-4">
+      <div>
+        <h2 class="text-lg font-bold text-white">Progreso & Estadísticas</h2>
+        <p class="text-xs text-purple-300/70">Evolución de volumen, marcas y peso corporal</p>
+      </div>
+
+      <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl p-4 space-y-4 shadow-lg">
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5">Métrica a Visualizar</label>
+          <select id="chart-metric-type" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <option value="volume">Volumen Total por Sesión (Kg totales movidos)</option>
+            <option value="exercise-weight">Carga Máxima por Ejercicio (Kg)</option>
+            <option value="exercise-1rm">1RM Estimado por Ejercicio (Kg)</option>
+            <option value="body-weight">Evolución del Peso Corporal (Kg)</option>
+          </select>
+        </div>
+
+        <div id="chart-exercise-select-container" class="hidden">
+          <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5">Seleccionar Ejercicio</label>
+          <select id="chart-exercise-select" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-[#23123b] text-center">
+          <div class="bg-[#180e2a] p-2 rounded-xl border border-[#2b1649]">
+            <p class="text-[10px] text-purple-400/80">Total Sesiones</p>
+            <p id="stat-total-workouts" class="text-base font-bold text-white">0</p>
+          </div>
+          <div class="bg-[#180e2a] p-2 rounded-xl border border-[#2b1649]">
+            <p class="text-[10px] text-purple-400/80">Kg Totales</p>
+            <p id="stat-total-volume" class="text-base font-bold text-fuchsia-400">0 kg</p>
+          </div>
+          <div class="bg-[#180e2a] p-2 rounded-xl border border-[#2b1649]">
+            <p class="text-[10px] text-purple-400/80">Media / Sesión</p>
+            <p id="stat-avg-volume" class="text-base font-bold text-purple-300">0 kg</p>
+          </div>
+        </div>
+
+        <div class="relative w-full h-64 mt-2">
+          <canvas id="mainChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. TAB: BASE DE EJERCICIOS Y RUTINAS -->
+    <section id="tab-exercises" class="tab-content hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Biblioteca & Rutinas</h2>
+          <p class="text-xs text-purple-300/70">Crea tus plantillas por días y gestiona tus ejercicios</p>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <button id="btn-create-routine-tab" class="px-2.5 py-1.5 rounded-xl bg-purple-700/80 hover:bg-purple-600 text-xs font-semibold text-white flex items-center space-x-1 border border-purple-500/30">
+            <i data-lucide="layers" class="w-3.5 h-3.5 text-fuchsia-400"></i>
+            <span>Crear Rutina</span>
+          </button>
+          <button id="btn-create-custom-exercise" class="px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-semibold text-white flex items-center space-x-1 shadow-md shadow-purple-900/40">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Ejercicio</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Rutinas Guardadas Box -->
+      <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl p-4 shadow space-y-2.5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
+            <i data-lucide="folder" class="w-4 h-4 text-fuchsia-400"></i>
+            <span>Mis Días / Rutinas Guardadas</span>
+          </h3>
+          <span id="routines-count-badge" class="text-[10px] text-purple-400">0 plantillas</span>
+        </div>
+        <div id="routines-list-container" class="space-y-2">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <div class="relative">
+          <input type="text" id="exercise-search-input" placeholder="Buscar ejercicio por nombre..." class="w-full bg-[#110a1f] border border-[#2a1645] rounded-xl pl-9 pr-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <i data-lucide="search" class="w-4 h-4 text-purple-400 absolute left-3 top-2.5"></i>
+        </div>
+        <div id="exercise-category-pills" class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
+          <button data-cat="all" class="cat-pill active px-3 py-1 rounded-full bg-purple-600 text-white font-medium whitespace-nowrap shadow-sm shadow-purple-900">Todos</button>
+          <button data-cat="Pecho" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Pecho</button>
+          <button data-cat="Espalda" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Espalda</button>
+          <button data-cat="Piernas" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Piernas</button>
+          <button data-cat="Hombros" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Hombros</button>
+          <button data-cat="Brazos" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Brazos</button>
+          <button data-cat="Core" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Core</button>
+          <button data-cat="custom" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Mis Ejercicios</button>
+        </div>
+      </div>
+
+      <div id="exercises-library-list" class="space-y-2">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- 7. TAB: PERFIL Y DATOS PERSONALES -->
+    <section id="tab-profile" class="tab-content hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Perfil & Metas Corporales</h2>
+          <p class="text-xs text-purple-300/70">Calculadora metabólica, peso meta y registro de peso</p>
+        </div>
+        <button id="btn-reopen-onboarding" class="text-[11px] text-fuchsia-400 hover:text-fuchsia-300 font-semibold px-2 py-1 rounded-lg border border-purple-500/30">
+          Repetir Encuesta Inicial
+        </button>
+      </div>
+
+      <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-[#23123b] pb-2">
+          <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider">Calculadora de Calorías & Metas</h3>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-fuchsia-300 border border-purple-500/30">Mifflin-St Jeor</span>
+        </div>
+
+        <form id="form-profile-calculator" class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] text-purple-300/80 block mb-1">Nombre / Apodo</label>
+              <input type="text" id="profile-name" placeholder="Tu nombre" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="text-[11px] text-purple-300/80 block mb-1">Género biológico</label>
+              <select id="profile-gender" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+                <option value="male">Hombre</option>
+                <option value="female">Mujer</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] text-purple-300/80 block mb-1">Edad</label>
+              <input type="number" id="profile-age" placeholder="26" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="text-[11px] text-purple-300/80 block mb-1">Altura (cm)</label>
+              <input type="number" id="profile-height" placeholder="178" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="text-[11px] text-purple-300/80 block mb-1">Peso Actual (kg)</label>
+              <input type="number" step="0.1" id="profile-current-weight" placeholder="77.3" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="text-[11px] text-fuchsia-400 font-bold block mb-1">Peso Ideal / Meta (kg) *</label>
+              <input type="number" step="0.1" id="profile-target-weight" placeholder="82.0" class="w-full bg-[#170e28] border border-fuchsia-500/50 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-fuchsia-400">
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[11px] text-purple-300/80 block mb-1">Nivel de Actividad Física</label>
+            <select id="profile-activity" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+              <option value="1.2">Sedentario (Poco o nada de ejercicio)</option>
+              <option value="1.375">Ligero (Entreno 1-3 días/semana)</option>
+              <option value="1.55" selected>Moderado (Gym 3-5 días/semana)</option>
+              <option value="1.725">Fuerte (Gym 6-7 días/semana intenso)</option>
+              <option value="1.9">Muy Fuerte (Atleta doble sesión / trabajo físico)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[11px] text-purple-300/80 block mb-1">Estrategia Deseada</label>
+            <select id="profile-goal-type" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+              <option value="surplus">Superávit Calórico / Hipertrofia (Ganar Masa: +380 kcal)</option>
+              <option value="deficit">Déficit Calórico / Definición (Perder Grasa: -450 kcal)</option>
+              <option value="maintenance">Mantenimiento Normocalórico (Mantener peso)</option>
+            </select>
+          </div>
+
+          <div id="calc-preview-box" class="bg-[#180e2a] p-3 rounded-2xl border border-purple-500/30 text-xs space-y-1.5">
+            <div class="flex justify-between items-center">
+              <span class="text-purple-300/70">Gasto Energético Total (TDEE):</span>
+              <span id="preview-tdee" class="font-bold text-white">-- kcal</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-purple-300/70">Ingesta Diaria Recomendada:</span>
+              <span id="preview-target-kcal" class="font-black text-fuchsia-400 text-sm">-- kcal</span>
+            </div>
+            <div class="flex justify-between items-center text-[10px] text-purple-400/80 pt-1 border-t border-[#2d174a]">
+              <span>Macros Sugeridos:</span>
+              <span id="preview-macros">P: --g | C: --g | G: --g</span>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-purple-700 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-purple-950 transition">
+            Guardar & Aplicar Metas a la Nutrición
+          </button>
+        </form>
+      </div>
+
+      <!-- Body Weight Log Section -->
+      <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
+              <i data-lucide="scale" class="w-4 h-4"></i>
+            </span>
+            <h3 class="text-sm font-bold text-white">Historial de Peso Corporal</h3>
+          </div>
+          <span id="current-weight-badge" class="text-xs font-bold text-fuchsia-400">-- kg</span>
+        </div>
+
+        <form id="form-log-weight" class="flex items-center space-x-2">
+          <input type="date" id="weight-entry-date" class="flex-1 bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+          <input type="number" step="0.1" id="weight-entry-val" placeholder="Kg (ej: 78.5)" class="w-28 bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500" required>
+          <button type="submit" class="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-md shadow-purple-900/30">
+            Añadir
+          </button>
+        </form>
+
+        <div id="weight-history-list" class="max-h-48 overflow-y-auto space-y-1.5 text-xs">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR (Mobile First) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0d071a]/95 backdrop-blur-md border-t border-[#24133b] max-w-lg mx-auto shadow-2xl">
+    <div class="grid grid-cols-5 py-2">
+      <button data-target="tab-calendar" class="nav-item active flex flex-col items-center justify-center text-purple-400 transition">
+        <i data-lucide="calendar" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-1">Calendario</span>
+      </button>
+      <button data-target="tab-workout" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
+        <i data-lucide="dumbbell" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-1">Entrenar</span>
+      </button>
+      <button data-target="tab-nutrition" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
+        <i data-lucide="utensils" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-1">Comidas</span>
+      </button>
+      <button data-target="tab-charts" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
+        <i data-lucide="line-chart" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-1">Gráficos</span>
+      </button>
+      <button data-target="tab-exercises" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
+        <i data-lucide="book-open" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-1">Rutinas</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ASISTENTE ONBOARDING INICIAL (PASO A PASO) -->
+  <!-- ========================================== -->
+  <div id="modal-onboarding" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-[#110a1f] border border-[#3b1b66] rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl animate-fade-in relative max-h-[92vh] overflow-y-auto">
+      
+      <!-- Stepper Indicator -->
+      <div class="flex items-center justify-between pb-3 border-b border-[#24133b]">
+        <div class="flex items-center space-x-2">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center text-xs font-black text-white">
+            IT
+          </div>
+          <span class="text-xs font-bold text-white tracking-wide">Bienvenido a IronTrack</span>
+        </div>
+        <div class="flex items-center space-x-1 text-[11px] font-bold text-fuchsia-400">
+          <span>Paso <span id="onboard-step-num">1</span> de 2</span>
+        </div>
+      </div>
+
+      <!-- PASO 1: DATOS PERSONALES BÁSICOS -->
+      <div id="onboard-step-1" class="space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-white">Tus Datos Personales</h3>
+          <p class="text-xs text-purple-300/70">Introduce tus datos para calcular tu metabolismo y consumo calórico.</p>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Tu Nombre o Apodo *</label>
+            <input type="text" id="ob-name" required placeholder="Ej: Alex" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Género biológico</label>
+              <select id="ob-gender" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+                <option value="male">Hombre</option>
+                <option value="female">Mujer</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Edad (años) *</label>
+              <input type="number" id="ob-age" placeholder="25" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Estatura (cm) *</label>
+              <input type="number" id="ob-height" placeholder="178" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Peso Actual (kg) *</label>
+              <input type="number" step="0.1" id="ob-current-weight" placeholder="75.0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nivel de Actividad Física Habitual</label>
+            <select id="ob-activity" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+              <option value="1.2">Sedentario (Trabajo de oficina / poco movimiento)</option>
+              <option value="1.375">Ligero (Entreno 1-3 días por semana)</option>
+              <option value="1.55" selected>Moderado (Gym 3-5 días por semana)</option>
+              <option value="1.725">Fuerte (Gym intenso 6-7 días)</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="btn-ob-next-1" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-purple-950 transition">
+          Continuar: Elegir Objetivo →
+        </button>
+      </div>
+
+      <!-- PASO 2: OBJETIVO Y PESO IDEAL -->
+      <div id="onboard-step-2" class="space-y-4 hidden">
+        <div>
+          <h3 class="text-base font-bold text-white">¿Cuál es tu Objetivo Principal?</h3>
+          <p class="text-xs text-purple-300/70">Calcularemos tus calorías y macronutrientes idóneos automáticamente.</p>
+        </div>
+
+        <div class="space-y-2.5">
+          <label class="ob-goal-card cursor-pointer p-3 rounded-2xl border border-purple-500 bg-purple-950/40 flex items-center space-x-3 transition">
+            <input type="radio" name="ob-goal" value="surplus" checked class="text-purple-600 focus:ring-0">
+            <div>
+              <p class="text-xs font-bold text-white flex items-center space-x-1.5">
+                <span>Ganar Masa Muscular (Superávit)</span>
+                <span class="text-[9px] bg-purple-500/30 text-fuchsia-300 px-1.5 py-0.5 rounded font-mono">+380 kcal</span>
+              </p>
+              <p class="text-[10px] text-purple-300/70">Aumento de volumen limpio y fuerza en los entrenamientos.</p>
+            </div>
+          </label>
+
+          <label class="ob-goal-card cursor-pointer p-3 rounded-2xl border border-[#2f184e] bg-[#170e28] flex items-center space-x-3 transition">
+            <input type="radio" name="ob-goal" value="deficit" class="text-purple-600 focus:ring-0">
+            <div>
+              <p class="text-xs font-bold text-white flex items-center space-x-1.5">
+                <span>Perder Grasa / Definición (Déficit)</span>
+                <span class="text-[9px] bg-rose-500/30 text-rose-300 px-1.5 py-0.5 rounded font-mono">-450 kcal</span>
+              </p>
+              <p class="text-[10px] text-purple-300/70">Reducir porcentaje graso preservando tu masa magra.</p>
+            </div>
+          </label>
+
+          <label class="ob-goal-card cursor-pointer p-3 rounded-2xl border border-[#2f184e] bg-[#170e28] flex items-center space-x-3 transition">
+            <input type="radio" name="ob-goal" value="maintenance" class="text-purple-600 focus:ring-0">
+            <div>
+              <p class="text-xs font-bold text-white">Mantener Peso / Rendimiento</p>
+              <p class="text-[10px] text-purple-300/70">Comer las mismas calorías que gastas en el día a día.</p>
+            </div>
+          </label>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-fuchsia-400 block mb-1">¿Qué peso ideal deseas alcanzar? (kg) *</label>
+          <input type="number" step="0.1" id="ob-target-weight" placeholder="80.0" class="w-full bg-[#170e28] border border-fuchsia-500/60 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-fuchsia-400">
+          <p class="text-[10px] text-purple-400/60 mt-1">Te servirá de referencia en tus gráficos de evolución corporal.</p>
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1">
+          <button id="btn-ob-back-2" class="w-1/3 py-2.5 rounded-xl bg-[#1b1030] hover:bg-[#251545] text-purple-300 font-bold text-xs border border-[#321a52]">
+            ← Volver
+          </button>
+          <button id="btn-ob-finish-simple" class="w-2/3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-purple-700 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-purple-950 transition">
+            Completar Perfil 🚀
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ASISTENTE DE RUTINAS POR DÍAS (NUEVO) -->
+  <!-- ========================================== -->
+  <div id="modal-wizard-routine" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-[#110a1f] border border-[#3b1b66] rounded-3xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-in relative max-h-[92vh] overflow-y-auto flex flex-col">
+      <div class="flex items-center justify-between pb-2.5 border-b border-[#24133b]">
+        <div class="flex items-center space-x-2">
+          <span class="p-1 rounded-lg bg-fuchsia-500/20 text-fuchsia-400">
+            <i data-lucide="calendar-range" class="w-4 h-4"></i>
+          </span>
+          <h3 class="text-sm font-bold text-white">Configurar Plan de Entrenamiento</h3>
+        </div>
+        <button id="btn-close-wizard-routine" class="p-1 text-purple-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Paso 1 del Asistente de Rutina: ¿Cuántos días? -->
+      <div id="routine-wizard-step-1" class="space-y-4">
+        <div>
+          <h4 class="text-sm font-bold text-white">¿Cuántos días vas a entrenar por semana?</h4>
+          <p class="text-xs text-purple-300/70">Se generará una plantilla para cada día (ej: Día 1, Día 2...).</p>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2">
+          <button type="button" class="btn-select-days py-3 rounded-2xl bg-[#170e28] hover:bg-[#24133e] border border-[#2f184e] text-center transition" data-days="2">
+            <span class="text-lg font-black text-white block">2</span>
+            <span class="text-[10px] text-purple-400">Días</span>
+          </button>
+          <button type="button" class="btn-select-days py-3 rounded-2xl bg-[#170e28] hover:bg-[#24133e] border border-[#2f184e] text-center transition" data-days="3">
+            <span class="text-lg font-black text-white block">3</span>
+            <span class="text-[10px] text-purple-400">Días</span>
+          </button>
+          <button type="button" class="btn-select-days py-3 rounded-2xl bg-[#170e28] hover:bg-[#24133e] border border-purple-500 bg-purple-950/40 text-center transition active" data-days="4">
+            <span class="text-lg font-black text-white block">4</span>
+            <span class="text-[10px] text-purple-400">Días</span>
+          </button>
+          <button type="button" class="btn-select-days py-3 rounded-2xl bg-[#170e28] hover:bg-[#24133e] border border-[#2f184e] text-center transition" data-days="5">
+            <span class="text-lg font-black text-white block">5</span>
+            <span class="text-[10px] text-purple-400">Días</span>
+          </button>
+        </div>
+
+        <div class="pt-1">
+          <label class="text-[11px] text-purple-300/80 block mb-1">Nombre general del Plan / Rutina</label>
+          <input type="text" id="wizard-plan-name" value="Mi Plan de Gimnasio" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <button id="btn-routine-wizard-to-step2" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-md transition">
+          Definir Ejercicios por Día →
+        </button>
+      </div>
+
+      <!-- Paso 2 del Asistente de Rutina: Configurar cada día -->
+      <div id="routine-wizard-step-2" class="space-y-4 hidden flex-1 flex flex-col">
+        <!-- Navegación entre pestañas de días -->
+        <div class="flex items-center justify-between">
+          <div id="wizard-days-nav" class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
+            <!-- Filled dynamically (Día 1, Día 2, etc.) -->
+          </div>
+        </div>
+
+        <div class="bg-[#170e28] border border-[#2e184c] rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <input type="text" id="wizard-day-title" placeholder="Ej: Día 1 - Empuje / Pecho" class="w-full bg-[#0d071a] border border-[#37195c] rounded-xl px-3 py-1.5 text-xs text-white font-bold focus:outline-none focus:border-purple-500">
+          </div>
+          <p class="text-[10px] text-purple-400">Añade los ejercicios que harás en este día. Se inicializan con 1 repetición para que pongas las tuyas al entrenar.</p>
+        </div>
+
+        <div class="flex-1 space-y-2 max-h-56 overflow-y-auto p-1" id="wizard-day-exercises-container">
+          <!-- Filled with exercises for the selected day -->
+        </div>
+
+        <button id="btn-wizard-add-exercise-to-day" class="w-full py-2.5 rounded-xl border border-dashed border-[#3e1f6e] bg-[#140b24]/50 hover:bg-[#1f1038] text-purple-300 font-semibold text-xs flex items-center justify-center space-x-1.5 transition">
+          <i data-lucide="plus" class="w-3.5 h-3.5 text-fuchsia-400"></i>
+          <span>Añadir Ejercicio a este Día</span>
+        </button>
+
+        <div class="flex items-center space-x-2 pt-2 border-t border-[#24133b]">
+          <button id="btn-routine-wizard-back-1" class="w-1/3 py-2.5 rounded-xl bg-[#1b1030] hover:bg-[#251545] text-purple-300 font-bold text-xs border border-[#321a52]">
+            ← Días
+          </button>
+          <button id="btn-save-all-wizard-routines" class="w-2/3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-purple-700 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-purple-950 transition">
+            Guardar Rutina Completa ✅
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRO RÁPIDO DE CALORÍAS DIRECTAS -->
+  <div id="modal-quick-calories" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl animate-fade-in">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white flex items-center space-x-1.5">
+          <i data-lucide="zap" class="w-4 h-4 text-fuchsia-400"></i>
+          <span>Registro Rápido de Calorías</span>
+        </h3>
+        <button id="btn-close-quick-calories-modal" class="p-1 text-purple-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-quick-calories" class="space-y-3">
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nombre o Comida</label>
+          <input type="text" id="quick-cal-name" required placeholder="Ej: Merienda / Sandwich mixto / Almuerzo" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Tipo de Comida</label>
+          <select id="quick-cal-mealtype" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <option value="Desayuno">Desayuno</option>
+            <option value="Comida">Comida / Almuerzo</option>
+            <option value="Merienda">Merienda</option>
+            <option value="Cena">Cena</option>
+            <option value="Snack">Snack / Post-entreno</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-fuchsia-400 block mb-1">Calorías Totales (kcal) *</label>
+          <input type="number" id="quick-cal-amount" required placeholder="Ej: 550" class="w-full bg-[#170e28] border border-fuchsia-500/50 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-fuchsia-400">
+        </div>
+        <div class="grid grid-cols-3 gap-2 pt-1">
+          <div>
+            <label class="text-[10px] text-purple-400 block mb-1">Prot. (g)</label>
+            <input type="number" id="quick-cal-prot" placeholder="0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-2 py-1.5 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="text-[10px] text-purple-400 block mb-1">Carb. (g)</label>
+            <input type="number" id="quick-cal-carbs" placeholder="0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-2 py-1.5 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="text-[10px] text-purple-400 block mb-1">Grasa (g)</label>
+            <input type="number" id="quick-cal-fat" placeholder="0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-2 py-1.5 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-md transition">
+          Añadir a Mis Calorías de Hoy
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: BUSCADOR DE ALIMENTOS -->
+  <div id="modal-food-search" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-[#110a1f] border border-[#2a1645] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-slide-up">
+      <div class="p-4 border-b border-[#24133b] flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white flex items-center space-x-1.5">
+          <i data-lucide="utensils" class="w-4 h-4 text-fuchsia-400"></i>
+          <span>Buscar Alimento (Kcal automáticas)</span>
+        </h3>
+        <button id="btn-close-food-search-modal" class="p-1 rounded-lg hover:bg-[#1f1138] text-purple-300">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-3 border-b border-[#24133b] space-y-2">
+        <input type="text" id="food-search-input" placeholder="Buscar alimento (ej: Pollo, Avena, Arroz, Huevo)..." class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+        <div class="flex items-center space-x-2">
+          <label class="text-[11px] text-purple-300/80 whitespace-nowrap">Comida destino:</label>
+          <select id="food-dest-mealtype" class="flex-1 bg-[#170e28] border border-[#321a52] rounded-lg px-2 py-1 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+            <option value="Desayuno">Desayuno</option>
+            <option value="Comida" selected>Comida / Almuerzo</option>
+            <option value="Merienda">Merienda</option>
+            <option value="Cena">Cena</option>
+            <option value="Snack">Snack</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="food-search-results-list" class="flex-1 overflow-y-auto p-3 space-y-2">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SELECCIONAR EJERCICIO PARA EL ENTRENAMIENTO -->
+  <div id="modal-exercise-picker" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-[#110a1f] border border-[#2a1645] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-slide-up">
+      <div class="p-4 border-b border-[#24133b] flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white">Elegir Ejercicio</h3>
+        <button id="btn-close-exercise-picker" class="p-1 rounded-lg hover:bg-[#1f1138] text-purple-300">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-3 border-b border-[#24133b]">
+        <input type="text" id="picker-search-input" placeholder="Buscar ejercicio..." class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+      </div>
+      <div id="picker-exercise-list" class="flex-1 overflow-y-auto p-3 space-y-2">
+        <!-- Filled with clickable exercise cards -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR EJERCICIO PROPIO -->
+  <div id="modal-custom-exercise" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl animate-fade-in">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Nuevo Ejercicio Propio</h3>
+        <button id="btn-close-custom-modal" class="p-1 text-purple-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="form-custom-exercise" class="space-y-3">
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nombre del Ejercicio *</label>
+          <input type="text" id="new-ex-name" required placeholder="Ej: Press Francés en Banco Inclinado" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Grupo Muscular Principal *</label>
+          <select id="new-ex-category" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <option value="Pecho">Pecho</option>
+            <option value="Espalda">Espalda</option>
+            <option value="Piernas">Piernas</option>
+            <option value="Hombros">Hombros</option>
+            <option value="Brazos">Brazos</option>
+            <option value="Core">Core</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Equipamiento</label>
+          <select id="new-ex-equipment" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <option value="Barra">Barra</option>
+            <option value="Mancuernas">Mancuernas</option>
+            <option value="Polea / Cable">Polea / Cable</option>
+            <option value="Máquina">Máquina</option>
+            <option value="Peso Corporal">Peso Corporal (Calistenia)</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-md transition">
+          Crear y Guardar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#1f1038] text-white px-4 py-2.5 rounded-xl border border-purple-500/40 shadow-2xl text-xs flex items-center space-x-2 pointer-events-none transition-all duration-300 opacity-0 -translate-y-2">
+    <i id="toast-icon" data-lucide="check" class="w-4 h-4 text-fuchsia-400"></i>
+    <span id="toast-msg">Mensaje</span>
+  </div>
+
+  <script src="db.js"></script>
+  <script src="muscleIcons.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error', err));
+      });
+    }
+  </script>
+</body>
+</html>

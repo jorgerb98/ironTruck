@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9333ea" />
+      <stop offset="50%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="#090514"/>
+  <!-- Glowing border effect -->
+  <rect width="504" height="504" x="4" y="4" rx="124" fill="none" stroke="#581c87" stroke-width="6"/>
+  <!-- Dumbbell Icon -->
+  <g fill="url(#purpleGrad)" transform="translate(64, 64) scale(0.75)">
+    <path d="M104 220 L104 292 A20 20 0 0 1 84 312 L48 312 A20 20 0 0 1 28 292 L28 220 A20 20 0 0 1 48 200 L84 200 A20 20 0 0 1 104 220 Z" />
+    <path d="M152 180 L152 332 A20 20 0 0 1 132 352 L112 352 A12 12 0 0 1 100 340 L100 172 A12 12 0 0 1 112 160 L132 160 A20 20 0 0 1 152 180 Z" />
+    <rect x="152" y="236" width="208" height="40" rx="8" fill="#f3e8ff" />
+    <path d="M408 220 L408 292 A20 20 0 0 0 428 312 L464 312 A20 20 0 0 0 484 292 L484 220 A20 20 0 0 0 464 200 L428 200 A20 20 0 0 0 408 220 Z" />
+    <path d="M360 180 L360 332 A20 20 0 0 0 380 352 L400 352 A12 12 0 0 0 412 340 L412 172 A12 12 0 0 0 400 160 L380 160 A20 20 0 0 0 360 180 Z" />
+  </g>
+</svg>
