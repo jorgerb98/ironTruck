@@ -7,6 +7,32 @@ let currentSession = {
   exercises: []
 };
 
+// -------------------------------------------------------------
+// AUTOGUARDADO DE SESIÓN EN CURSO
+// -------------------------------------------------------------
+const SESSION_DRAFT_KEY = 'it_session_draft';
+
+function autosaveSession() {
+  localStorage.setItem(SESSION_DRAFT_KEY, JSON.stringify(currentSession));
+}
+
+function clearSessionDraft() {
+  localStorage.removeItem(SESSION_DRAFT_KEY);
+}
+
+function restoreSessionDraft() {
+  const saved = localStorage.getItem(SESSION_DRAFT_KEY);
+  if (!saved) return false;
+  try {
+    const draft = JSON.parse(saved);
+    if (draft && draft.exercises && draft.exercises.length > 0) {
+      currentSession = draft;
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
 // Estado del Calendario
 let calendarCurrentDate = new Date();
 let calendarSelectedDate = new Date().toISOString().split('T')[0];
@@ -54,12 +80,22 @@ document.addEventListener('DOMContentLoaded', () => {
   renderExercisesLibrary();
   renderRoutinesList();
   populateRoutinePresetsDropdown();
+
+  // Recuperar sesión en curso si la app se cerró a medias
+  const hadDraft = restoreSessionDraft();
+  if (hadDraft) {
+    renderSessionExercises();
+    showToast('✅ Sesión recuperada automáticamente');
+  }
+
   renderHistory();
   renderPRs();
   renderWeightHistory();
   setupChartControls();
   setupEventListeners();
   setupOnboardingAndRoutineWizard();
+  setupEditRoutineModal();
+  setupEditExerciseModal();
 });
 
 // -------------------------------------------------------------
@@ -455,6 +491,7 @@ function loadRoutineIntoSession(routine) {
     };
   });
 
+  autosaveSession();
   renderSessionExercises();
   showToast(`Rutina "${routine.name}" cargada con 1 repetición base.`);
 }
@@ -492,6 +529,9 @@ function renderRoutinesList() {
           <button onclick="startWorkoutFromRoutine('${r.id}')" class="px-2.5 py-1 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold shadow flex items-center space-x-1">
             <i data-lucide="play" class="w-3 h-3"></i>
             <span>Entrenar</span>
+          </button>
+          <button onclick="openEditRoutineModal('${r.id}')" class="p-1 text-purple-400/70 hover:text-fuchsia-300 transition" title="Editar rutina">
+            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
           </button>
           <button onclick="deleteRoutineItem('${r.id}')" class="p-1 text-purple-400/50 hover:text-rose-400">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -1073,6 +1113,7 @@ function addExerciseToSession(exerciseId) {
   };
 
   currentSession.exercises.push(newExerciseEntry);
+  autosaveSession();
   renderSessionExercises();
   showToast(`Añadido: ${exercise.name}`);
 }
@@ -1166,7 +1207,11 @@ function renderSessionExercises() {
                     onchange="updateSetData(${exIndex}, ${setIndex}, 'rir', this.value)"
                     class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1 text-center text-[11px] text-purple-200 focus:outline-none focus:border-purple-500" placeholder="2" title="Repeticiones en Reserva (RIR)">
                 </div>
-                <div class="col-span-1 text-center">
+                <div class="col-span-1 text-center flex flex-col items-center gap-0.5">
+                  ${setIndex < item.sets.length - 1 ? `
+                  <button onclick="copySetToNext(${exIndex}, ${setIndex})" class="text-fuchsia-400/70 hover:text-fuchsia-300 p-0.5" title="Copiar a la serie siguiente">
+                    <i data-lucide="copy" class="w-3 h-3"></i>
+                  </button>` : `<div class="w-3 h-3"></div>`}
                   <button onclick="removeSet(${exIndex}, ${setIndex})" class="text-purple-400/50 hover:text-rose-400 p-0.5">
                     <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
                   </button>
@@ -1195,6 +1240,7 @@ function renderSessionExercises() {
 function updateSetData(exIndex, setIndex, field, value) {
   if (currentSession.exercises[exIndex] && currentSession.exercises[exIndex].sets[setIndex]) {
     currentSession.exercises[exIndex].sets[setIndex][field] = parseFloat(value) || 0;
+    autosaveSession();
   }
 }
 
@@ -1204,6 +1250,7 @@ function addSetToExercise(exIndex) {
   const lastSet = ex.sets[ex.sets.length - 1];
   const newSet = lastSet ? { ...lastSet, reps: 1 } : { weight: 0, reps: 1, rir: 2 };
   ex.sets.push(newSet);
+  autosaveSession();
   renderSessionExercises();
   startRestTimer(90);
 }
@@ -1217,11 +1264,27 @@ function removeSet(exIndex, setIndex) {
     removeExerciseFromSession(exIndex);
     return;
   }
+  autosaveSession();
   renderSessionExercises();
+}
+
+function copySetToNext(exIndex, setIndex) {
+  const ex = currentSession.exercises[exIndex];
+  if (!ex) return;
+  const src = ex.sets[setIndex];
+  const dst = ex.sets[setIndex + 1];
+  if (!src || !dst) return;
+  dst.weight = src.weight;
+  dst.reps   = src.reps;
+  dst.rir    = src.rir;
+  autosaveSession();
+  renderSessionExercises();
+  showToast('Serie copiada ✓');
 }
 
 function removeExerciseFromSession(exIndex) {
   currentSession.exercises.splice(exIndex, 1);
+  autosaveSession();
   renderSessionExercises();
 }
 
@@ -1248,6 +1311,7 @@ function saveCurrentWorkout() {
 
   tagInput.value = '';
   currentSession.exercises = [];
+  clearSessionDraft();
   renderSessionExercises();
   renderHistory();
   renderPRs();
@@ -1599,6 +1663,9 @@ function renderExercisesLibrary() {
           <span>Añadir</span>
         </button>
         ${e.isCustom ? `
+          <button onclick="openEditExerciseModal('${e.id}')" class="p-1 text-purple-400/70 hover:text-fuchsia-300 transition" title="Editar ejercicio">
+            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+          </button>
           <button onclick="deleteCustomExercise('${e.id}')" class="p-1 text-purple-400/50 hover:text-rose-400">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
           </button>
@@ -1911,6 +1978,139 @@ function setupEventListeners() {
       }
     };
     reader.readAsText(file);
+  });
+}
+
+// -------------------------------------------------------------
+// EDITAR RUTINA
+// -------------------------------------------------------------
+let editingRoutineId = null;
+
+function openEditRoutineModal(routineId) {
+  const routine = DB.getRoutines().find(r => r.id === routineId);
+  if (!routine) return;
+
+  editingRoutineId = routineId;
+  document.getElementById('edit-routine-name').value = routine.name;
+  renderEditRoutineExercises(routine.exercises);
+
+  document.getElementById('modal-edit-routine').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function renderEditRoutineExercises(exercises) {
+  const container = document.getElementById('edit-routine-exercises-list');
+  if (!exercises || exercises.length === 0) {
+    container.innerHTML = `<p class="text-xs text-purple-400/50 text-center py-4">Sin ejercicios. Pulsa "Añadir Ejercicio".</p>`;
+    return;
+  }
+  container.innerHTML = exercises.map((ex, i) => `
+    <div class="bg-[#170e28] border border-[#2f184e] rounded-xl p-3 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-bold text-white">${ex.exerciseName}</p>
+        <div class="flex items-center space-x-2 mt-1">
+          <span class="text-[10px] text-purple-400">Series:</span>
+          <input type="number" min="1" max="10" value="${ex.targetSets || 3}"
+            onchange="updateEditRoutineExSets(${i}, this.value)"
+            class="w-12 bg-[#0d071a] border border-[#37195c] rounded-lg py-0.5 px-1.5 text-center text-xs text-white focus:outline-none focus:border-purple-500">
+        </div>
+      </div>
+      <button onclick="removeEditRoutineExercise(${i})" class="p-1 text-purple-400/50 hover:text-rose-400">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  `).join('');
+  lucide.createIcons();
+}
+
+function updateEditRoutineExSets(index, value) {
+  const all = DB.getRoutines();
+  const routine = all.find(r => r.id === editingRoutineId);
+  if (!routine) return;
+  routine.exercises[index].targetSets = parseInt(value) || 3;
+  localStorage.setItem('it_routines', JSON.stringify(all));
+}
+
+function removeEditRoutineExercise(index) {
+  const all = DB.getRoutines();
+  const routine = all.find(r => r.id === editingRoutineId);
+  if (!routine) return;
+  routine.exercises.splice(index, 1);
+  localStorage.setItem('it_routines', JSON.stringify(all));
+  renderEditRoutineExercises(routine.exercises);
+}
+
+function setupEditRoutineModal() {
+  document.getElementById('btn-close-edit-routine').addEventListener('click', () => {
+    document.getElementById('modal-edit-routine').classList.add('hidden');
+    editingRoutineId = null;
+  });
+
+  document.getElementById('btn-edit-routine-add-exercise').addEventListener('click', () => {
+    openExercisePickerForRoutine((selectedEx) => {
+      const all = DB.getRoutines();
+      const routine = all.find(r => r.id === editingRoutineId);
+      if (!routine) return;
+      routine.exercises.push({ exerciseId: selectedEx.id, exerciseName: selectedEx.name, targetSets: 3 });
+      localStorage.setItem('it_routines', JSON.stringify(all));
+      renderEditRoutineExercises(routine.exercises);
+    });
+  });
+
+  document.getElementById('btn-save-edit-routine').addEventListener('click', () => {
+    const newName = document.getElementById('edit-routine-name').value.trim();
+    if (!newName) { showToast('El nombre no puede estar vacío'); return; }
+    const all = DB.getRoutines();
+    const routine = all.find(r => r.id === editingRoutineId);
+    if (!routine) return;
+    routine.name = newName;
+    localStorage.setItem('it_routines', JSON.stringify(all));
+    document.getElementById('modal-edit-routine').classList.add('hidden');
+    editingRoutineId = null;
+    renderRoutinesList();
+    populateRoutinePresetsDropdown();
+    showToast('Rutina actualizada ✓');
+  });
+}
+
+// -------------------------------------------------------------
+// EDITAR EJERCICIO PROPIO
+// -------------------------------------------------------------
+function openEditExerciseModal(exerciseId) {
+  const ex = DB.getExercises().find(e => e.id === exerciseId);
+  if (!ex || !ex.isCustom) return;
+
+  document.getElementById('edit-ex-id').value = ex.id;
+  document.getElementById('edit-ex-name').value = ex.name;
+  document.getElementById('edit-ex-category').value = ex.category;
+  document.getElementById('edit-ex-equipment').value = ex.equipment;
+
+  document.getElementById('modal-edit-exercise').classList.remove('hidden');
+}
+
+function setupEditExerciseModal() {
+  document.getElementById('btn-close-edit-exercise').addEventListener('click', () => {
+    document.getElementById('modal-edit-exercise').classList.add('hidden');
+  });
+
+  document.getElementById('form-edit-exercise').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id        = document.getElementById('edit-ex-id').value;
+    const name      = document.getElementById('edit-ex-name').value.trim();
+    const category  = document.getElementById('edit-ex-category').value;
+    const equipment = document.getElementById('edit-ex-equipment').value;
+
+    const exercises = DB.getExercises();
+    const idx = exercises.findIndex(ex => ex.id === id);
+    if (idx === -1) return;
+
+    exercises[idx] = { ...exercises[idx], name, category, equipment };
+    localStorage.setItem('it_exercises', JSON.stringify(exercises));
+
+    document.getElementById('modal-edit-exercise').classList.add('hidden');
+    renderExercisesLibrary();
+    setupChartControls();
+    showToast('Ejercicio actualizado ✓');
   });
 }
 

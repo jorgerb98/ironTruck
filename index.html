@@ -960,6 +960,86 @@
     </div>
   </div>
 
+  <!-- MODAL: EDITAR RUTINA -->
+  <div id="modal-edit-routine" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-[#110a1f] border border-[#2a1645] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Header -->
+      <div class="p-4 border-b border-[#24133b] flex items-center justify-between flex-shrink-0">
+        <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+          <i data-lucide="pencil" class="w-4 h-4 text-fuchsia-400"></i>
+          <span>Editar Rutina</span>
+        </h3>
+        <button id="btn-close-edit-routine" class="p-1 rounded-lg hover:bg-[#1f1138] text-purple-300">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Nombre de la rutina -->
+      <div class="p-4 border-b border-[#24133b] flex-shrink-0">
+        <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nombre de la Rutina</label>
+        <input type="text" id="edit-routine-name" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500" placeholder="Nombre de la rutina">
+      </div>
+
+      <!-- Lista de ejercicios editables -->
+      <div id="edit-routine-exercises-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+
+      <!-- Botón añadir ejercicio -->
+      <div class="p-3 border-t border-[#24133b] flex-shrink-0 space-y-2">
+        <button id="btn-edit-routine-add-exercise" class="w-full py-2 rounded-xl bg-[#180e2a] hover:bg-[#23133d] text-purple-300 text-xs font-semibold flex items-center justify-center space-x-1 border border-[#37195c]">
+          <i data-lucide="plus" class="w-3.5 h-3.5 text-fuchsia-400"></i>
+          <span>Añadir Ejercicio</span>
+        </button>
+        <button id="btn-save-edit-routine" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-md">
+          Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR EJERCICIO PROPIO -->
+  <div id="modal-edit-exercise" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Editar Ejercicio</h3>
+        <button id="btn-close-edit-exercise" class="p-1 text-purple-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="form-edit-exercise" class="space-y-3">
+        <input type="hidden" id="edit-ex-id">
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nombre del Ejercicio *</label>
+          <input type="text" id="edit-ex-name" required class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Grupo Muscular Principal *</label>
+          <select id="edit-ex-category" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <option value="Pecho">Pecho</option>
+            <option value="Espalda">Espalda</option>
+            <option value="Piernas">Piernas</option>
+            <option value="Hombros">Hombros</option>
+            <option value="Brazos">Brazos</option>
+            <option value="Core">Core</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Equipamiento</label>
+          <select id="edit-ex-equipment" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <option value="Barra">Barra</option>
+            <option value="Mancuernas">Mancuernas</option>
+            <option value="Polea / Cable">Polea / Cable</option>
+            <option value="Máquina">Máquina</option>
+            <option value="Peso Corporal">Peso Corporal (Calistenia)</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-md transition">
+          Guardar Cambios
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#1f1038] text-white px-4 py-2.5 rounded-xl border border-purple-500/40 shadow-2xl text-xs flex items-center space-x-2 pointer-events-none transition-all duration-300 opacity-0 -translate-y-2">
     <i id="toast-icon" data-lucide="check" class="w-4 h-4 text-fuchsia-400"></i>
