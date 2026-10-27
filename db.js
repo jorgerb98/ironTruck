@@ -5,13 +5,16 @@ const DEFAULT_EXERCISES = [
   { id: 'bench-press', name: 'Press de Banca Plano con Barra', category: 'Pecho', equipment: 'Barra', isCustom: false },
   { id: 'incline-db-press', name: 'Press Inclinado con Mancuernas', category: 'Pecho', equipment: 'Mancuernas', isCustom: false },
   { id: 'chest-fly-cable', name: 'Aperturas en Cruce de Poleas', category: 'Pecho', equipment: 'Polea / Cable', isCustom: false },
+  { id: 'chest-fly-cable-machine', name: 'Mariposa maquina', category: 'Pecho', equipment: 'Máquina', isCustom: false },
   { id: 'dips-chest', name: 'Fondos en Paralelas (Pecho)', category: 'Pecho', equipment: 'Peso Corporal', isCustom: false },
   { id: 'machine-chest-press', name: 'Press en Máquina Sentado', category: 'Pecho', equipment: 'Máquina', isCustom: false },
 
   // Espalda
   { id: 'deadlift', name: 'Peso Muerto Convencional', category: 'Espalda', equipment: 'Barra', isCustom: false },
   { id: 'barbell-row', name: 'Remo con Barra Pendlay / 90°', category: 'Espalda', equipment: 'Barra', isCustom: false },
+  { id: 'barbell-row-machine', name: 'Remo maquina / 90°', category: 'Espalda', equipment: 'Máquina', isCustom: false },
   { id: 'lat-pulldown', name: 'Jalón al Pecho en Polea', category: 'Espalda', equipment: 'Polea / Cable', isCustom: false },
+  { id: 'lat-pulldown-neutr', name: 'Jalón al Pecho agarre Neutro', category: 'Espalda', equipment: 'Polea / Cable', isCustom: false },
   { id: 'pull-ups', name: 'Dominadas Pronas / Neutras', category: 'Espalda', equipment: 'Peso Corporal', isCustom: false },
   { id: 'seated-cable-row', name: 'Remo Gironda en Polea Baja', category: 'Espalda', equipment: 'Polea / Cable', isCustom: false },
 
@@ -22,17 +25,23 @@ const DEFAULT_EXERCISES = [
   { id: 'leg-extension', name: 'Extensión de Cuádriceps', category: 'Piernas', equipment: 'Máquina', isCustom: false },
   { id: 'leg-curl', name: 'Curl Femoral Tumbado/Sentado', category: 'Piernas', equipment: 'Máquina', isCustom: false },
   { id: 'calf-raise', name: 'Elevación de Gemelos de Pie', category: 'Piernas', equipment: 'Máquina', isCustom: false },
+  { id: 'bulgarian', name: 'Sentadillas bulgaras', category: 'Piernas', equipment: 'Mancuernas', isCustom: false },
+  { id: 'hipThrust', name: 'Hip Thrust', category: 'Piernas', equipment: 'Mancuernas', isCustom: false },
+  { id: 'aductors', name: 'Aductores', category: 'Piernas', equipment: 'Máquina', isCustom: false },
+  { id: 'abductors', name: 'Abductores', category: 'Piernas', equipment: 'Máquina', isCustom: false },
 
   // Hombros
   { id: 'overhead-press', name: 'Press Militar de Pie con Barra', category: 'Hombros', equipment: 'Barra', isCustom: false },
   { id: 'db-shoulder-press', name: 'Press de Hombro con Mancuernas', category: 'Hombros', equipment: 'Mancuernas', isCustom: false },
-  { id: 'lateral-raises', name: 'Elevaciones Laterales con Mancuerna', category: 'Hombros', equipment: 'Mancuernas', isCustom: false },
+  { id: 'db-shoulder-press-machine', name: 'Press de Hombro', category: 'Hombros', equipment: 'Máquina', isCustom: false },
+  { id: 'lateral-raises', name: 'Elevaciones Laterales', category: 'Hombros', equipment: 'Polea / Cable', isCustom: false },
   { id: 'face-pull', name: 'Face Pull en Polea con Cuerda', category: 'Hombros', equipment: 'Polea / Cable', isCustom: false },
 
   // Brazos
   { id: 'barbell-curl', name: 'Curl de Bíceps con Barra Z', category: 'Brazos', equipment: 'Barra', isCustom: false },
   { id: 'db-hammer-curl', name: 'Curl Martillo con Mancuernas', category: 'Brazos', equipment: 'Mancuernas', isCustom: false },
   { id: 'tricep-pushdown', name: 'Extensiones de Tríceps en Polea', category: 'Brazos', equipment: 'Polea / Cable', isCustom: false },
+  { id: 'tricep-aboveHead', name: 'Extensiones de Tríceps encima cabeza', category: 'Brazos', equipment: 'Polea / Cable', isCustom: false },
   { id: 'skull-crushers', name: 'Press Francés / Skullcrushers', category: 'Brazos', equipment: 'Barra', isCustom: false },
 
   // Core
