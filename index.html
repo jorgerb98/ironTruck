@@ -176,13 +176,14 @@
               <span>Crear Rutina Completa</span>
             </button>
           </div>
-          <div class="flex items-center space-x-2">
-            <select id="workout-routine-preset" class="flex-1 bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <select id="workout-routine-preset" class="w-full sm:flex-1 min-w-0 bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2.5 text-xs text-purple-100 focus:outline-none focus:border-purple-500 truncate">
               <option value="">-- Elige una rutina para cargar sus ejercicios --</option>
               <!-- Filled with routines -->
             </select>
-            <button id="btn-load-routine-preset" class="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-md">
-              Cargar
+            <button id="btn-load-routine-preset" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-md flex items-center justify-center space-x-1.5 flex-shrink-0">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+              <span>Cargar Rutina</span>
             </button>
           </div>
         </div>
