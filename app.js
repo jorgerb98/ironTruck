@@ -1,4 +1,4 @@
-﻿// app.js - Lógica principal de IronTrack (Tema Negro & Morado Neón + Calendario + Nutrición Kcal + Onboarding Simplificado y Asistente de Rutinas por Días)
+// app.js - Lógica principal de IronTrack (Tema Negro & Morado Neón + Calendario + Nutrición Kcal + Onboarding Simplificado y Asistente de Rutinas por Días)
 
 // Estado local de la sesión en curso
 let currentSession = {
@@ -1278,7 +1278,7 @@ function updateChart() {
     backgroundColor = 'rgba(192, 132, 252, 0.2)';
     labels = filteredWorkouts.map(w => {
       const dateStr = w.date.substring(5);
-      return ${dateStr};
+      return dateStr;
     });
     dataPoints = filteredWorkouts.map(w => calculateSessionVolume(w));
   } else if (metricType === 'exercise-weight' || metricType === 'exercise-1rm') {
@@ -1294,7 +1294,7 @@ function updateChart() {
       if (match) {
         labels.push(w.date.substring(5));
         if (metricType === 'exercise-weight') {
-          labelName = `Carga MÃ¡x: ${exName} (kg)`;
+          labelName = `Carga Máx: ${exName} (kg)`;
           const maxW = Math.max(...match.sets.map(s => parseFloat(s.weight) || 0));
           dataPoints.push(maxW);
         } else {
