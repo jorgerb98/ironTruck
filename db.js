@@ -51,40 +51,10 @@ const DEFAULT_EXERCISES = [
   { id: 'plank', name: 'Plancha Abdominal Isométrica', category: 'Core', equipment: 'Peso Corporal', isCustom: false }
 ];
 
-// Base de datos de alimentos precargados
-const DEFAULT_FOODS = [
-  { id: 'food-chicken', name: 'Pechuga de Pollo a la plancha', calories: 165, protein: 31, carbs: 0, fat: 3.6, portionUnit: 'g' },
-  { id: 'food-egg', name: 'Huevo entero (1 ud ~ 55g)', calories: 78, protein: 6.5, carbs: 0.6, fat: 5.3, portionUnit: 'ud' },
-  { id: 'food-egg-white', name: 'Claras de huevo (100g)', calories: 52, protein: 11, carbs: 0.7, fat: 0.2, portionUnit: 'g' },
-  { id: 'food-tuna', name: 'Atún al natural en lata', calories: 116, protein: 26, carbs: 0, fat: 1, portionUnit: 'g' },
-  { id: 'food-beef', name: 'Ternera magra / Picada 5%', calories: 137, protein: 21, carbs: 0, fat: 5, portionUnit: 'g' },
-  { id: 'food-salmon', name: 'Salmón fresco', calories: 208, protein: 20, carbs: 0, fat: 13, portionUnit: 'g' },
-  { id: 'food-protein-whey', name: 'Proteína Whey en Polvo (1 cacito ~30g)', calories: 115, protein: 24, carbs: 2, fat: 1.5, portionUnit: 'scoop' },
-  { id: 'food-greek-yogurt', name: 'Yogur Griego 0% natural', calories: 59, protein: 10, carbs: 3.6, fat: 0.2, portionUnit: 'g' },
-
-  { id: 'food-rice', name: 'Arroz Blanco (pesado en seco)', calories: 360, protein: 7, carbs: 80, fat: 0.6, portionUnit: 'g' },
-  { id: 'food-oats', name: 'Copos de Avena', calories: 375, protein: 13.5, carbs: 60, fat: 7, portionUnit: 'g' },
-  { id: 'food-potato', name: 'Patata cocida / asada', calories: 77, protein: 2, carbs: 17, fat: 0.1, portionUnit: 'g' },
-  { id: 'food-sweet-potato', name: 'Boniato / Batata', calories: 86, protein: 1.6, carbs: 20, fat: 0.1, portionUnit: 'g' },
-  { id: 'food-pasta', name: 'Pasta de trigo (en seco)', calories: 355, protein: 12, carbs: 72, fat: 1.5, portionUnit: 'g' },
-  { id: 'food-bread', name: 'Pan Integral (1 rebanada ~40g)', calories: 95, protein: 3.5, carbs: 18, fat: 1, portionUnit: 'rebanada' },
-  { id: 'food-banana', name: 'Plátano mediano (~100g)', calories: 89, protein: 1.1, carbs: 23, fat: 0.3, portionUnit: 'ud' },
-  { id: 'food-apple', name: 'Manzana fresca', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, portionUnit: 'ud' },
-
-  { id: 'food-olive-oil', name: 'Aceite de Oliva Virgen Extra (1 cda ~ 10g)', calories: 90, protein: 0, carbs: 0, fat: 10, portionUnit: 'cda' },
-  { id: 'food-peanut-butter', name: 'Crema de Cacahuete 100% (1 cda ~ 20g)', calories: 125, protein: 5.5, carbs: 2.5, fat: 10, portionUnit: 'cda' },
-  { id: 'food-nuts', name: 'Frutos secos variados / Nueces (puñado 30g)', calories: 195, protein: 4.5, carbs: 4, fat: 19, portionUnit: 'g' },
-  { id: 'food-avocado', name: 'Aguacate', calories: 160, protein: 2, carbs: 9, fat: 15, portionUnit: 'g' },
-  { id: 'food-whole-milk', name: 'Leche entera (vaso 250ml)', calories: 150, protein: 8, carbs: 12, fat: 8, portionUnit: 'vaso' }
-];
-
 const DB = {
   init() {
     if (!localStorage.getItem('it_exercises')) {
       localStorage.setItem('it_exercises', JSON.stringify(DEFAULT_EXERCISES));
-    }
-    if (!localStorage.getItem('it_foods')) {
-      localStorage.setItem('it_foods', JSON.stringify(DEFAULT_FOODS));
     }
     if (!localStorage.getItem('it_routines')) {
       // Rutinas plantilla de ejemplo de 4 días (Hipertrofia - 2 estímulos por semana)
@@ -96,7 +66,7 @@ const DB = {
           exercises: [
             { exerciseId: 'machine-chest-press', exerciseName: 'Press en Máquina Sentado', targetSets: 3 },
             { exerciseId: 'lat-pulldown', exerciseName: 'Jalón al Pecho en Polea', targetSets: 3 },
-            { exerciseId: 'overhead-press', exerciseName: 'Press Militar de Pie con Barra', targetSets: 3 },
+            { exerciseId: 'db-shoulder-press-machine', exerciseName: 'Press de Hombro', targetSets: 3 },
             { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
             { exerciseId: 'chest-fly-cable-machine', exerciseName: 'Mariposa maquina', targetSets: 2 },
             { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
@@ -215,9 +185,6 @@ const DB = {
       localStorage.setItem('it_routines', JSON.stringify(sampleRoutines));
       localStorage.setItem('it_routines_version', 'v4_hypertrophy');
     }
-    if (!localStorage.getItem('it_meals')) {
-      localStorage.setItem('it_meals', JSON.stringify([]));
-    }
     if (!localStorage.getItem('it_workouts')) {
       localStorage.setItem('it_workouts', JSON.stringify([]));
     }
@@ -314,47 +281,16 @@ const DB = {
     localStorage.setItem('it_weights', JSON.stringify(list));
   },
 
-  // COMIDAS
-  getFoods() {
-    return JSON.parse(localStorage.getItem('it_foods') || '[]');
-  },
-
-  saveFood(food) {
-    const list = this.getFoods();
-    list.unshift(food);
-    localStorage.setItem('it_foods', JSON.stringify(list));
-    return food;
-  },
-
-  getMeals() {
-    return JSON.parse(localStorage.getItem('it_meals') || '[]');
-  },
-
-  saveMeal(meal) {
-    const list = this.getMeals();
-    list.unshift(meal);
-    localStorage.setItem('it_meals', JSON.stringify(list));
-    return meal;
-  },
-
-  deleteMeal(id) {
-    let list = this.getMeals();
-    list = list.filter(m => m.id !== id);
-    localStorage.setItem('it_meals', JSON.stringify(list));
-  },
-
   // Exportar todo como JSON
   exportAll() {
     return JSON.stringify({
-      version: 3,
+      version: 4,
       onboardingDone: this.hasCompletedOnboarding(),
       profile: this.getProfile(),
       routines: this.getRoutines(),
       exercises: this.getExercises(),
       workouts: this.getWorkouts(),
-      weights: this.getWeights(),
-      foods: this.getFoods(),
-      meals: this.getMeals()
+      weights: this.getWeights()
     }, null, 2);
   },
 
@@ -367,8 +303,6 @@ const DB = {
       if (data.exercises) localStorage.setItem('it_exercises', JSON.stringify(data.exercises));
       if (data.workouts) localStorage.setItem('it_workouts', JSON.stringify(data.workouts));
       if (data.weights) localStorage.setItem('it_weights', JSON.stringify(data.weights));
-      if (data.foods) localStorage.setItem('it_foods', JSON.stringify(data.foods));
-      if (data.meals) localStorage.setItem('it_meals', JSON.stringify(data.meals));
       localStorage.setItem('it_onboarding_done', 'true');
       return true;
     } catch (e) {

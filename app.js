@@ -1,4 +1,4 @@
-// app.js - Lógica principal de IronTrack (Tema Negro & Morado Neón + Calendario + Nutrición Kcal + Onboarding Simplificado y Asistente de Rutinas por Días)
+﻿// app.js - Lógica principal de IronTrack (Tema Negro & Morado Neón + Calendario + Nutrición Kcal + Onboarding Simplificado y Asistente de Rutinas por Días)
 
 // Estado local de la sesión en curso
 let currentSession = {
@@ -607,288 +607,6 @@ function setupTabs() {
 }
 
 // -------------------------------------------------------------
-// NUTRICIÓN, CALORÍAS Y CÁLCULO DE METAS (Mifflin-St Jeor)
-// -------------------------------------------------------------
-function calculateMetabolism(weight, height, age, gender, activityLevel, goalType) {
-  let bmr = 0;
-  if (gender === 'male') {
-    bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
-  } else {
-    bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
-  }
-
-  const tdee = Math.round(bmr * activityLevel);
-
-  let targetCalories = tdee;
-  if (goalType === 'surplus') {
-    targetCalories = Math.round(tdee + 380);
-  } else if (goalType === 'deficit') {
-    targetCalories = Math.round(tdee - 450);
-  }
-
-  const targetProtein = Math.round(weight * 2.1);
-  const targetFat = Math.round(weight * 0.9);
-  const caloriesFromProtFat = (targetProtein * 4) + (targetFat * 9);
-  const remainingKcal = Math.max(0, targetCalories - caloriesFromProtFat);
-  const targetCarbs = Math.round(remainingKcal / 4);
-
-  return { bmr, tdee, targetCalories, targetProtein, targetCarbs, targetFat };
-}
-
-function initNutrition() {
-  const dateInput = document.getElementById('nutrition-view-date');
-  if (dateInput) {
-    dateInput.addEventListener('change', (e) => {
-      currentNutritionDate = e.target.value;
-      renderNutritionOverview();
-    });
-  }
-
-  const quickCalModal = document.getElementById('modal-quick-calories');
-  document.getElementById('btn-open-quick-calorie-modal').addEventListener('click', () => {
-    quickCalModal.classList.remove('hidden');
-  });
-  document.getElementById('btn-close-quick-calories-modal').addEventListener('click', () => {
-    quickCalModal.classList.add('hidden');
-  });
-
-  document.getElementById('form-quick-calories').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('quick-cal-name').value.trim();
-    const mealType = document.getElementById('quick-cal-mealtype').value;
-    const calories = parseInt(document.getElementById('quick-cal-amount').value) || 0;
-    const protein = parseFloat(document.getElementById('quick-cal-prot').value) || 0;
-    const carbs = parseFloat(document.getElementById('quick-cal-carbs').value) || 0;
-    const fat = parseFloat(document.getElementById('quick-cal-fat').value) || 0;
-
-    const newMeal = {
-      id: 'meal_' + Date.now(),
-      date: currentNutritionDate,
-      name,
-      mealType,
-      calories,
-      protein,
-      carbs,
-      fat
-    };
-
-    DB.saveMeal(newMeal);
-    quickCalModal.classList.add('hidden');
-    document.getElementById('form-quick-calories').reset();
-    renderNutritionOverview();
-    showToast(`Comida "${name}" (+${calories} kcal) registrada`);
-  });
-
-  const foodSearchModal = document.getElementById('modal-food-search');
-  document.getElementById('btn-open-food-search-modal').addEventListener('click', () => {
-    openFoodSearchModal();
-  });
-  document.getElementById('btn-close-food-search-modal').addEventListener('click', () => {
-    foodSearchModal.classList.add('hidden');
-  });
-
-  document.getElementById('food-search-input').addEventListener('input', (e) => {
-    renderFoodSearchResults(e.target.value);
-  });
-
-  renderNutritionOverview();
-}
-
-function openFoodSearchModal() {
-  const modal = document.getElementById('modal-food-search');
-  const input = document.getElementById('food-search-input');
-  input.value = '';
-  modal.classList.remove('hidden');
-  renderFoodSearchResults('');
-}
-
-function renderFoodSearchResults(term) {
-  const container = document.getElementById('food-search-results-list');
-  const foods = DB.getFoods();
-  const searchLower = term.toLowerCase().trim();
-
-  const filtered = foods.filter(f => f.name.toLowerCase().includes(searchLower));
-
-  if (filtered.length === 0) {
-    container.innerHTML = `
-      <div class="text-center py-6 bg-[#160c2b] border border-dashed border-[#2d184a] rounded-2xl">
-        <p class="text-xs text-purple-400/70">No se encontraron alimentos</p>
-        <p class="text-[10px] text-purple-500/50 mt-1">Usa la opción de "Calorías Directas" para registrar cualquier plato.</p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = filtered.map(f => `
-    <div class="bg-[#170e28] border border-[#2e184c] rounded-2xl p-3 flex flex-col space-y-2">
-      <div class="flex items-start justify-between">
-        <div>
-          <h4 class="text-xs font-bold text-white">${f.name}</h4>
-          <p class="text-[10px] text-purple-400 font-mono mt-0.5">${f.calories} kcal • P: ${f.protein}g | C: ${f.carbs}g | G: ${f.fat}g (por 100g / porción)</p>
-        </div>
-      </div>
-      <div class="flex items-center space-x-2 pt-1 border-t border-[#25123d]">
-        <span class="text-[11px] text-purple-300/80">Cantidad:</span>
-        <input type="number" id="grams-${f.id}" value="${f.portionUnit === 'ud' || f.portionUnit === 'scoop' || f.portionUnit === 'cda' || f.portionUnit === 'vaso' || f.portionUnit === 'rebanada' ? '1' : '150'}" step="1" min="1"
-          class="w-20 bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-2 text-center text-xs text-white font-bold focus:outline-none focus:border-purple-500">
-        <span class="text-[10px] text-purple-400">${f.portionUnit === 'g' ? 'gramos' : f.portionUnit}</span>
-        <button onclick="logCalculatedFood('${f.id}')" class="ml-auto px-3 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-md transition">
-          Añadir
-        </button>
-      </div>
-    </div>
-  `).join('');
-
-  lucide.createIcons();
-}
-
-function logCalculatedFood(foodId) {
-  const foods = DB.getFoods();
-  const food = foods.find(f => f.id === foodId);
-  if (!food) return;
-
-  const amountInput = document.getElementById(`grams-${foodId}`);
-  const amount = parseFloat(amountInput ? amountInput.value : 100) || 100;
-  const mealType = document.getElementById('food-dest-mealtype').value;
-
-  let ratio = amount / 100;
-  if (food.portionUnit !== 'g') {
-    ratio = amount;
-  }
-
-  const calculatedCalories = Math.round(food.calories * ratio);
-  const calculatedProt = Math.round((food.protein * ratio) * 10) / 10;
-  const calculatedCarbs = Math.round((food.carbs * ratio) * 10) / 10;
-  const calculatedFat = Math.round((food.fat * ratio) * 10) / 10;
-
-  const portionLabel = food.portionUnit === 'g' ? `${amount}g` : `${amount} ${food.portionUnit}`;
-
-  const newMeal = {
-    id: 'meal_' + Date.now(),
-    date: currentNutritionDate,
-    name: `${food.name} (${portionLabel})`,
-    mealType,
-    calories: calculatedCalories,
-    protein: calculatedProt,
-    carbs: calculatedCarbs,
-    fat: calculatedFat
-  };
-
-  DB.saveMeal(newMeal);
-  document.getElementById('modal-food-search').classList.add('hidden');
-  renderNutritionOverview();
-  showToast(`Añadido: ${food.name} (+${calculatedCalories} kcal)`);
-}
-
-function renderNutritionOverview() {
-  const profile = DB.getProfile();
-  const targetKcal = profile.targetCalories || 2650;
-  const targetProt = profile.targetProtein || 160;
-  const targetCarbs = profile.targetCarbs || 320;
-  const targetFat = profile.targetFat || 70;
-
-  const goalBadge = document.getElementById('nutrition-goal-badge');
-  if (goalBadge) {
-    let goalName = 'Superávit Calórico';
-    if (profile.goalType === 'deficit') goalName = 'Déficit Calórico';
-    if (profile.goalType === 'maintenance') goalName = 'Mantenimiento';
-    const tWeight = profile.targetWeight ? `${profile.targetWeight} kg` : 'Por fijar';
-    goalBadge.innerHTML = `<span>${goalName}</span> <span class="text-[11px] text-fuchsia-400 font-normal">(Meta: ${tWeight})</span>`;
-  }
-
-  const allMeals = DB.getMeals();
-  const dayMeals = allMeals.filter(m => m.date === currentNutritionDate);
-
-  let totalCalories = 0;
-  let totalProt = 0;
-  let totalCarbs = 0;
-  let totalFat = 0;
-
-  dayMeals.forEach(m => {
-    totalCalories += m.calories || 0;
-    totalProt += m.protein || 0;
-    totalCarbs += m.carbs || 0;
-    totalFat += m.fat || 0;
-  });
-
-  const remainingKcal = targetKcal - totalCalories;
-
-  document.getElementById('diet-consumed-kcal').innerText = totalCalories.toLocaleString();
-  document.getElementById('diet-target-kcal').innerText = targetKcal.toLocaleString();
-  
-  const remainingEl = document.getElementById('diet-remaining-kcal');
-  if (remainingKcal >= 0) {
-    remainingEl.innerText = `${remainingKcal.toLocaleString()} restantes`;
-    remainingEl.className = 'text-xl font-extrabold text-fuchsia-400 tracking-tight';
-  } else {
-    remainingEl.innerText = `+${Math.abs(remainingKcal).toLocaleString()} exceso`;
-    remainingEl.className = 'text-xl font-extrabold text-amber-400 tracking-tight';
-  }
-
-  const percentKcal = Math.min(100, Math.round((totalCalories / targetKcal) * 100));
-  const progBar = document.getElementById('diet-kcal-progress-bar');
-  if (progBar) progBar.style.width = `${percentKcal}%`;
-
-  document.getElementById('macro-prot-consumed').innerText = Math.round(totalProt);
-  document.getElementById('macro-prot-target').innerText = targetProt;
-  const protBar = document.getElementById('macro-prot-bar');
-  if (protBar) protBar.style.width = `${Math.min(100, Math.round((totalProt / targetProt) * 100))}%`;
-
-  document.getElementById('macro-carbs-consumed').innerText = Math.round(totalCarbs);
-  document.getElementById('macro-carbs-target').innerText = targetCarbs;
-  const carbsBar = document.getElementById('macro-carbs-bar');
-  if (carbsBar) carbsBar.style.width = `${Math.min(100, Math.round((totalCarbs / targetCarbs) * 100))}%`;
-
-  document.getElementById('macro-fat-consumed').innerText = Math.round(totalFat);
-  document.getElementById('macro-fat-target').innerText = targetFat;
-  const fatBar = document.getElementById('macro-fat-bar');
-  if (fatBar) fatBar.style.width = `${Math.min(100, Math.round((totalFat / targetFat) * 100))}%`;
-
-  const mealsList = document.getElementById('today-meals-list');
-  const countBadge = document.getElementById('meals-count-badge');
-  if (countBadge) countBadge.innerText = `${dayMeals.length} registros`;
-
-  if (!mealsList) return;
-
-  if (dayMeals.length === 0) {
-    mealsList.innerHTML = `
-      <div class="text-center py-6 bg-[#160c2b]/50 border border-dashed border-[#2d184a] rounded-2xl">
-        <i data-lucide="cookie" class="w-7 h-7 text-purple-500/50 mx-auto mb-1.5"></i>
-        <p class="text-xs font-semibold text-purple-200">No hay comidas anotadas para esta fecha</p>
-        <p class="text-[10px] text-purple-400/60 mt-0.5">Usa "Buscar Alimento" o "Calorías Directas" para sumar.</p>
-      </div>
-    `;
-    lucide.createIcons();
-    return;
-  }
-
-  mealsList.innerHTML = dayMeals.map(m => `
-    <div class="bg-[#170e28] border border-[#2e184c] rounded-2xl p-3 flex items-center justify-between">
-      <div>
-        <div class="flex items-center space-x-2">
-          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">${m.mealType}</span>
-          <h4 class="text-xs font-bold text-white truncate max-w-[180px]">${m.name}</h4>
-        </div>
-        <p class="text-[10px] text-purple-400/80 font-mono mt-1">
-          <strong class="text-fuchsia-400">${m.calories} kcal</strong> • P: ${m.protein || 0}g | C: ${m.carbs || 0}g | G: ${m.fat || 0}g
-        </p>
-      </div>
-      <button onclick="deleteMealItem('${m.id}')" class="p-1.5 text-purple-500/50 hover:text-rose-400 transition" title="Eliminar comida">
-        <i data-lucide="trash-2" class="w-4 h-4"></i>
-      </button>
-    </div>
-  `).join('');
-
-  lucide.createIcons();
-}
-
-function deleteMealItem(mealId) {
-  DB.deleteMeal(mealId);
-  renderNutritionOverview();
-  showToast('Comida eliminada');
-}
-
-// -------------------------------------------------------------
 // CALENDARIO DE ENTRENAMIENTOS
 // -------------------------------------------------------------
 function initCalendar() {
@@ -1458,12 +1176,33 @@ function setupChartControls() {
   const metricTypeSelect = document.getElementById('chart-metric-type');
   const exSelectContainer = document.getElementById('chart-exercise-select-container');
   const exSelect = document.getElementById('chart-exercise-select');
+  const routineSelectContainer = document.getElementById('chart-routine-select-container');
+  const routineSelect = document.getElementById('chart-routine-select');
 
   const exercises = DB.getExercises();
   exSelect.innerHTML = exercises.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
 
+  const updateRoutineDropdown = () => {
+    if (!routineSelect) return;
+    const workouts = DB.getWorkouts();
+    const tags = [...new Set(workouts.map(w => w.tag || 'Entrenamiento General').filter(Boolean))];
+    let html = '<option value="all">Todas las Sesiones</option>';
+    tags.forEach(t => {
+      html += `<option value="${t}">${t}</option>`;
+    });
+    routineSelect.innerHTML = html;
+  };
+
+  updateRoutineDropdown();
+
   metricTypeSelect.addEventListener('change', () => {
     const val = metricTypeSelect.value;
+    if (val === 'volume') {
+      if (routineSelectContainer) routineSelectContainer.classList.remove('hidden');
+    } else {
+      if (routineSelectContainer) routineSelectContainer.classList.add('hidden');
+    }
+
     if (val === 'exercise-weight' || val === 'exercise-1rm') {
       exSelectContainer.classList.remove('hidden');
     } else {
@@ -1471,6 +1210,12 @@ function setupChartControls() {
     }
     updateChart();
   });
+
+  if (routineSelect) {
+    routineSelect.addEventListener('change', () => {
+      updateChart();
+    });
+  }
 
   exSelect.addEventListener('change', () => {
     updateChart();
@@ -1480,21 +1225,39 @@ function setupChartControls() {
 function updateChart() {
   const metricType = document.getElementById('chart-metric-type').value;
   const selectedExId = document.getElementById('chart-exercise-select').value;
+  const routineSelect = document.getElementById('chart-routine-select');
+  const selectedRoutineTag = routineSelect ? routineSelect.value : 'all';
   const ctx = document.getElementById('mainChart');
   if (!ctx) return;
 
-  const workouts = DB.getWorkouts().slice().reverse();
-  const weights = DB.getWeights();
+  // Ordenar cronolÃ³gicamente ascendente (antiguo a reciente) para que el grÃ¡fico vaya de izquierda a derecha
+  const rawWorkouts = DB.getWorkouts();
+  const sortedWorkouts = rawWorkouts.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  const rawWeights = DB.getWeights();
+  const sortedWeights = rawWeights.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Actualizar opciones de rutinas si hay nuevas registradas
+  if (routineSelect && rawWorkouts.length > 0) {
+    const tags = [...new Set(rawWorkouts.map(w => w.tag || 'Entrenamiento General').filter(Boolean))];
+    const currVal = routineSelect.value || 'all';
+    let html = '<option value="all">Todas las Sesiones</option>';
+    tags.forEach(t => {
+      html += `<option value="${t}">${t}</option>`;
+    });
+    routineSelect.innerHTML = html;
+    routineSelect.value = tags.includes(currVal) ? currVal : 'all';
+  }
 
   const statWorkouts = document.getElementById('stat-total-workouts');
   const statTotalVol = document.getElementById('stat-total-volume');
   const statAvgVol = document.getElementById('stat-avg-volume');
 
   let totalVolAll = 0;
-  workouts.forEach(w => totalVolAll += calculateSessionVolume(w));
-  statWorkouts.innerText = workouts.length;
+  rawWorkouts.forEach(w => totalVolAll += calculateSessionVolume(w));
+  statWorkouts.innerText = rawWorkouts.length;
   statTotalVol.innerText = (totalVolAll / 1000).toFixed(1) + ' t';
-  statAvgVol.innerText = workouts.length ? Math.round(totalVolAll / workouts.length) + ' kg' : '0 kg';
+  statAvgVol.innerText = rawWorkouts.length ? Math.round(totalVolAll / rawWorkouts.length) + ' kg' : '0 kg';
 
   let labels = [];
   let dataPoints = [];
@@ -1503,11 +1266,21 @@ function updateChart() {
   let backgroundColor = 'rgba(168, 85, 247, 0.2)';
 
   if (metricType === 'volume') {
-    labelName = 'Volumen Total (kg movidos)';
+    let filteredWorkouts = sortedWorkouts;
+    if (selectedRoutineTag && selectedRoutineTag !== 'all') {
+      filteredWorkouts = sortedWorkouts.filter(w => (w.tag || 'Entrenamiento General') === selectedRoutineTag);
+      labelName = `Volumen: ${selectedRoutineTag} (kg)`;
+    } else {
+      labelName = 'Volumen Total (todas las sesiones)';
+    }
+
     borderColor = '#c084fc';
     backgroundColor = 'rgba(192, 132, 252, 0.2)';
-    labels = workouts.map(w => w.date.substring(5));
-    dataPoints = workouts.map(w => calculateSessionVolume(w));
+    labels = filteredWorkouts.map(w => {
+      const dateStr = w.date.substring(5);
+      return ${dateStr};
+    });
+    dataPoints = filteredWorkouts.map(w => calculateSessionVolume(w));
   } else if (metricType === 'exercise-weight' || metricType === 'exercise-1rm') {
     const exList = DB.getExercises();
     const exObj = exList.find(e => e.id === selectedExId);
@@ -1516,12 +1289,12 @@ function updateChart() {
     borderColor = '#f43f5e';
     backgroundColor = 'rgba(244, 63, 94, 0.2)';
 
-    workouts.forEach(w => {
+    sortedWorkouts.forEach(w => {
       const match = w.exercises.find(e => e.exerciseId === selectedExId);
       if (match) {
         labels.push(w.date.substring(5));
         if (metricType === 'exercise-weight') {
-          labelName = `Carga Máx: ${exName} (kg)`;
+          labelName = `Carga MÃ¡x: ${exName} (kg)`;
           const maxW = Math.max(...match.sets.map(s => parseFloat(s.weight) || 0));
           dataPoints.push(maxW);
         } else {
@@ -1535,8 +1308,8 @@ function updateChart() {
     labelName = 'Peso Corporal (kg)';
     borderColor = '#38bdf8';
     backgroundColor = 'rgba(56, 189, 248, 0.2)';
-    labels = weights.map(w => w.date.substring(5));
-    dataPoints = weights.map(w => w.weight);
+    labels = sortedWeights.map(w => w.date.substring(5));
+    dataPoints = sortedWeights.map(w => w.weight);
   }
 
   if (mainChartInstance) {

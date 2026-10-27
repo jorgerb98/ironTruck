@@ -267,6 +267,14 @@
           </select>
         </div>
 
+        <div id="chart-routine-select-container">
+          <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5">Filtrar por Rutina / Sesión</label>
+          <select id="chart-routine-select" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <option value="all">Todas las Sesiones</option>
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
         <div id="chart-exercise-select-container" class="hidden">
           <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5">Seleccionar Ejercicio</label>
           <select id="chart-exercise-select" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
@@ -354,8 +362,8 @@
     <section id="tab-profile" class="tab-content hidden space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-bold text-white">Perfil & Metas Corporales</h2>
-          <p class="text-xs text-purple-300/70">Calculadora metabólica, peso meta y registro de peso</p>
+          <h2 class="text-lg font-bold text-white">Perfil de Usuario</h2>
+          <p class="text-xs text-purple-300/70">Datos personales y registro de peso corporal</p>
         </div>
         <button id="btn-reopen-onboarding" class="text-[11px] text-fuchsia-400 hover:text-fuchsia-300 font-semibold px-2 py-1 rounded-lg border border-purple-500/30">
           Repetir Encuesta Inicial
@@ -364,8 +372,7 @@
 
       <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-4">
         <div class="flex items-center justify-between border-b border-[#23123b] pb-2">
-          <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider">Calculadora de Calorías & Metas</h3>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-fuchsia-300 border border-purple-500/30">Mifflin-St Jeor</span>
+          <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider">Datos Personales</h3>
         </div>
 
         <form id="form-profile-calculator" class="space-y-3">
@@ -389,18 +396,15 @@
               <label class="text-[11px] text-purple-300/80 block mb-1">Altura (cm)</label>
               <input type="number" id="profile-height" placeholder="178" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
             </div>
-            <div>
-              <label class="text-[11px] text-purple-300/80 block mb-1">Peso Actual (kg)</label>
-              <input type="number" step="0.1" id="profile-current-weight" placeholder="77.3" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-            </div>
-            <div>
-              <label class="text-[11px] text-fuchsia-400 font-bold block mb-1">Peso Ideal / Meta (kg) *</label>
-              <input type="number" step="0.1" id="profile-target-weight" placeholder="82.0" class="w-full bg-[#170e28] border border-fuchsia-500/50 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-fuchsia-400">
-            </div>
           </div>
 
           <div>
-            <label class="text-[11px] text-purple-300/80 block mb-1">Nivel de Actividad Física</label>
+            <label class="text-[11px] text-purple-300/80 block mb-1">Peso Actual (kg)</label>
+            <input type="number" step="0.1" id="profile-current-weight" placeholder="77.3" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+          </div>
+
+          <div>
+            <label class="text-[11px] text-purple-300/80 block mb-1">Nivel de Actividad Física Habitual</label>
             <select id="profile-activity" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
               <option value="1.2">Sedentario (Poco o nada de ejercicio)</option>
               <option value="1.375">Ligero (Entreno 1-3 días/semana)</option>
@@ -410,32 +414,8 @@
             </select>
           </div>
 
-          <div>
-            <label class="text-[11px] text-purple-300/80 block mb-1">Estrategia Deseada</label>
-            <select id="profile-goal-type" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-              <option value="surplus">Superávit Calórico / Hipertrofia (Ganar Masa: +380 kcal)</option>
-              <option value="deficit">Déficit Calórico / Definición (Perder Grasa: -450 kcal)</option>
-              <option value="maintenance">Mantenimiento Normocalórico (Mantener peso)</option>
-            </select>
-          </div>
-
-          <div id="calc-preview-box" class="bg-[#180e2a] p-3 rounded-2xl border border-purple-500/30 text-xs space-y-1.5">
-            <div class="flex justify-between items-center">
-              <span class="text-purple-300/70">Gasto Energético Total (TDEE):</span>
-              <span id="preview-tdee" class="font-bold text-white">-- kcal</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-purple-300/70">Ingesta Diaria Recomendada:</span>
-              <span id="preview-target-kcal" class="font-black text-fuchsia-400 text-sm">-- kcal</span>
-            </div>
-            <div class="flex justify-between items-center text-[10px] text-purple-400/80 pt-1 border-t border-[#2d174a]">
-              <span>Macros Sugeridos:</span>
-              <span id="preview-macros">P: --g | C: --g | G: --g</span>
-            </div>
-          </div>
-
           <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-purple-700 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-purple-950 transition">
-            Guardar & Aplicar Metas a la Nutrición
+            Guardar Datos del Perfil
           </button>
         </form>
       </div>
@@ -634,93 +614,6 @@
         </div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- MODAL: REGISTRO RÁPIDO DE CALORÍAS DIRECTAS -->
-  <div id="modal-quick-calories" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl animate-fade-in">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-white flex items-center space-x-1.5">
-          <i data-lucide="zap" class="w-4 h-4 text-fuchsia-400"></i>
-          <span>Registro Rápido de Calorías</span>
-        </h3>
-        <button id="btn-close-quick-calories-modal" class="p-1 text-purple-400 hover:text-white">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <form id="form-quick-calories" class="space-y-3">
-        <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nombre o Comida</label>
-          <input type="text" id="quick-cal-name" required placeholder="Ej: Merienda / Sandwich mixto / Almuerzo" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
-        </div>
-        <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Tipo de Comida</label>
-          <select id="quick-cal-mealtype" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
-            <option value="Desayuno">Desayuno</option>
-            <option value="Comida">Comida / Almuerzo</option>
-            <option value="Merienda">Merienda</option>
-            <option value="Cena">Cena</option>
-            <option value="Snack">Snack / Post-entreno</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-[11px] font-semibold text-fuchsia-400 block mb-1">Calorías Totales (kcal) *</label>
-          <input type="number" id="quick-cal-amount" required placeholder="Ej: 550" class="w-full bg-[#170e28] border border-fuchsia-500/50 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-fuchsia-400">
-        </div>
-        <div class="grid grid-cols-3 gap-2 pt-1">
-          <div>
-            <label class="text-[10px] text-purple-400 block mb-1">Prot. (g)</label>
-            <input type="number" id="quick-cal-prot" placeholder="0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-2 py-1.5 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-          </div>
-          <div>
-            <label class="text-[10px] text-purple-400 block mb-1">Carb. (g)</label>
-            <input type="number" id="quick-cal-carbs" placeholder="0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-2 py-1.5 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-          </div>
-          <div>
-            <label class="text-[10px] text-purple-400 block mb-1">Grasa (g)</label>
-            <input type="number" id="quick-cal-fat" placeholder="0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-2 py-1.5 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-          </div>
-        </div>
-
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-md transition">
-          Añadir a Mis Calorías de Hoy
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: BUSCADOR DE ALIMENTOS -->
-  <div id="modal-food-search" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-[#110a1f] border border-[#2a1645] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-slide-up">
-      <div class="p-4 border-b border-[#24133b] flex items-center justify-between">
-        <h3 class="text-sm font-bold text-white flex items-center space-x-1.5">
-          <i data-lucide="utensils" class="w-4 h-4 text-fuchsia-400"></i>
-          <span>Buscar Alimento (Kcal automáticas)</span>
-        </h3>
-        <button id="btn-close-food-search-modal" class="p-1 rounded-lg hover:bg-[#1f1138] text-purple-300">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="p-3 border-b border-[#24133b] space-y-2">
-        <input type="text" id="food-search-input" placeholder="Buscar alimento (ej: Pollo, Avena, Arroz, Huevo)..." class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-        <div class="flex items-center space-x-2">
-          <label class="text-[11px] text-purple-300/80 whitespace-nowrap">Comida destino:</label>
-          <select id="food-dest-mealtype" class="flex-1 bg-[#170e28] border border-[#321a52] rounded-lg px-2 py-1 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-            <option value="Desayuno">Desayuno</option>
-            <option value="Comida" selected>Comida / Almuerzo</option>
-            <option value="Merienda">Merienda</option>
-            <option value="Cena">Cena</option>
-            <option value="Snack">Snack</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="food-search-results-list" class="flex-1 overflow-y-auto p-3 space-y-2">
-        <!-- Rendered dynamically -->
-      </div>
     </div>
   </div>
 
