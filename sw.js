@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento Offline PWA
-const CACHE_NAME = 'irontrack-v2';
+const CACHE_NAME = 'irontrack-v3';
 const ASSETS = [
   './',
   './index.html',

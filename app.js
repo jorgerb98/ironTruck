@@ -69,14 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const weightDateInput = document.getElementById('weight-entry-date');
   if (weightDateInput) weightDateInput.value = new Date().toISOString().split('T')[0];
 
-  const nutritionDateInput = document.getElementById('nutrition-view-date');
-  if (nutritionDateInput) nutritionDateInput.value = currentNutritionDate;
-
   setupTabs();
   loadProfile();
   checkFirstTimeUser();
   initCalendar();
-  initNutrition();
   renderExercisesLibrary();
   renderRoutinesList();
   populateRoutinePresetsDropdown();
@@ -99,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // -------------------------------------------------------------
-// ONBOARDING INICIAL: DATOS PERSONALES Y OBJETIVO
+// ONBOARDING INICIAL: DATOS PERSONALES BÁSICOS
 // -------------------------------------------------------------
 function checkFirstTimeUser() {
   if (!DB.hasCompletedOnboarding()) {
@@ -116,86 +112,26 @@ function openOnboardingModal() {
   if (prof.age) document.getElementById('ob-age').value = prof.age;
   if (prof.height) document.getElementById('ob-height').value = prof.height;
   if (prof.weight) document.getElementById('ob-current-weight').value = prof.weight;
-  if (prof.targetWeight) document.getElementById('ob-target-weight').value = prof.targetWeight;
+  if (prof.gender) document.getElementById('ob-gender').value = prof.gender;
 
-  showOnboardingStep(1);
   modal.classList.remove('hidden');
 }
 
-function showOnboardingStep(stepNumber) {
-  document.getElementById('onboard-step-1').classList.add('hidden');
-  document.getElementById('onboard-step-2').classList.add('hidden');
-  document.getElementById(`onboard-step-${stepNumber}`).classList.remove('hidden');
-  document.getElementById('onboard-step-num').innerText = stepNumber;
-}
-
 function setupOnboardingAndRoutineWizard() {
-  // Paso 1 -> 2
-  document.getElementById('btn-ob-next-1').addEventListener('click', () => {
-    const name = document.getElementById('ob-name').value.trim();
-    const age = parseInt(document.getElementById('ob-age').value);
-    const height = parseFloat(document.getElementById('ob-height').value);
-    const weight = parseFloat(document.getElementById('ob-current-weight').value);
+  // Finalizar Onboarding — guardar datos básicos y cerrar
+  document.getElementById('btn-ob-finish-simple').addEventListener('click', () => {
+    const name   = document.getElementById('ob-name').value.trim() || 'Atleta';
+    const gender = document.getElementById('ob-gender').value;
+    const age    = parseInt(document.getElementById('ob-age').value) || 25;
+    const height = parseFloat(document.getElementById('ob-height').value) || 175;
+    const weight = parseFloat(document.getElementById('ob-current-weight').value) || 75;
 
-    if (!name || !age || !height || !weight) {
-      alert('Por favor completa todos tus datos para poder calcular tu ingesta y objetivos.');
+    if (!document.getElementById('ob-name').value.trim() || !document.getElementById('ob-age').value || !document.getElementById('ob-height').value || !document.getElementById('ob-current-weight').value) {
+      alert('Por favor completa todos los campos para continuar.');
       return;
     }
 
-    const targetWeightInput = document.getElementById('ob-target-weight');
-    if (!targetWeightInput.value) {
-      targetWeightInput.value = (weight + 5).toFixed(1);
-    }
-
-    showOnboardingStep(2);
-  });
-
-  // Paso 2 -> 1
-  document.getElementById('btn-ob-back-2').addEventListener('click', () => showOnboardingStep(1));
-
-  // Selección de tarjetas objetivo
-  document.querySelectorAll('input[name="ob-goal"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      document.querySelectorAll('.ob-goal-card').forEach(c => {
-        c.classList.remove('border-purple-500', 'bg-purple-950/40');
-        c.classList.add('border-[#2f184e]', 'bg-[#170e28]');
-      });
-      const card = radio.closest('.ob-goal-card');
-      if (card) {
-        card.classList.remove('border-[#2f184e]', 'bg-[#170e28]');
-        card.classList.add('border-purple-500', 'bg-purple-950/40');
-      }
-    });
-  });
-
-  // Finalizar Onboarding Básico
-  document.getElementById('btn-ob-finish-simple').addEventListener('click', () => {
-    const name = document.getElementById('ob-name').value.trim() || 'Atleta';
-    const gender = document.getElementById('ob-gender').value;
-    const age = parseInt(document.getElementById('ob-age').value) || 25;
-    const height = parseFloat(document.getElementById('ob-height').value) || 175;
-    const weight = parseFloat(document.getElementById('ob-current-weight').value) || 75;
-    const activity = parseFloat(document.getElementById('ob-activity').value) || 1.55;
-    const selectedGoal = document.querySelector('input[name="ob-goal"]:checked');
-    const goalType = selectedGoal ? selectedGoal.value : 'surplus';
-    const targetWeight = parseFloat(document.getElementById('ob-target-weight').value) || (weight + 5);
-
-    const results = calculateMetabolism(weight, height, age, gender, activity, goalType);
-
-    const newProfile = {
-      name,
-      gender,
-      age,
-      height,
-      weight,
-      targetWeight,
-      activityLevel: activity,
-      goalType,
-      targetCalories: results.targetCalories,
-      targetProtein: results.targetProtein,
-      targetCarbs: results.targetCarbs,
-      targetFat: results.targetFat
-    };
+    const newProfile = { name, gender, age, height, weight };
 
     DB.saveProfile(newProfile);
     DB.addWeight({ date: new Date().toISOString().split('T')[0], weight });
@@ -203,9 +139,7 @@ function setupOnboardingAndRoutineWizard() {
 
     document.getElementById('modal-onboarding').classList.add('hidden');
     loadProfile();
-    renderNutritionOverview();
-
-    showToast(`¡Perfil listo! Ahora puedes crear tu rutina de entrenamiento.`);
+    showToast(`¡Bienvenido, ${name}! Ya puedes crear tu rutina.`);
   });
 
   const btnReopen = document.getElementById('btn-reopen-onboarding');
@@ -602,13 +536,11 @@ function setupTabs() {
     });
 
     if (targetId === 'tab-calendar') renderCalendar();
-    if (targetId === 'tab-nutrition') renderNutritionOverview();
     if (targetId === 'tab-charts') updateChart();
     if (targetId === 'tab-history') {
       renderHistory();
       renderPRs();
     }
-    if (targetId === 'tab-profile') updateProfileCalculationsPreview();
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1730,58 +1662,35 @@ function selectPickerExercise(id) {
 // -------------------------------------------------------------
 function loadProfile() {
   const profile = DB.getProfile();
-  if (profile.name) document.getElementById('profile-name').value = profile.name;
-  if (profile.gender) document.getElementById('profile-gender').value = profile.gender;
-  if (profile.age) document.getElementById('profile-age').value = profile.age;
-  if (profile.height) document.getElementById('profile-height').value = profile.height;
-  if (profile.weight) document.getElementById('profile-current-weight').value = profile.weight;
-  if (profile.targetWeight) document.getElementById('profile-target-weight').value = profile.targetWeight;
-  if (profile.activityLevel) document.getElementById('profile-activity').value = profile.activityLevel;
-  if (profile.goalType) document.getElementById('profile-goal-type').value = profile.goalType;
+  if (profile.name) document.getElementById('profile-name') && (document.getElementById('profile-name').value = profile.name);
+  if (profile.gender) document.getElementById('profile-gender') && (document.getElementById('profile-gender').value = profile.gender);
+  if (profile.age) document.getElementById('profile-age') && (document.getElementById('profile-age').value = profile.age);
+  if (profile.height) document.getElementById('profile-height') && (document.getElementById('profile-height').value = profile.height);
+  if (profile.weight) document.getElementById('profile-current-weight') && (document.getElementById('profile-current-weight').value = profile.weight);
+  if (profile.activityLevel) document.getElementById('profile-activity') && (document.getElementById('profile-activity').value = profile.activityLevel);
 
   const weights = DB.getWeights();
   const lastWeight = weights.length ? weights[weights.length - 1].weight : (profile.weight || '--');
 
   const headerStatus = document.getElementById('header-user-status');
   if (headerStatus) {
-    headerStatus.innerText = `${profile.name || 'Atleta'} • ${lastWeight} kg • Meta: ${profile.targetWeight || 80} kg`;
+    headerStatus.innerText = `${profile.name || 'Atleta'} • ${lastWeight} kg`;
   }
 
   const badge = document.getElementById('current-weight-badge');
   if (badge) badge.innerText = `${lastWeight} kg`;
-
-  updateProfileCalculationsPreview();
 }
 
 function updateProfileCalculationsPreview() {
-  const weight = parseFloat(document.getElementById('profile-current-weight').value) || 75;
-  const height = parseFloat(document.getElementById('profile-height').value) || 175;
-  const age = parseInt(document.getElementById('profile-age').value) || 25;
-  const gender = document.getElementById('profile-gender').value || 'male';
-  const activity = parseFloat(document.getElementById('profile-activity').value) || 1.55;
-  const goalType = document.getElementById('profile-goal-type').value || 'surplus';
-
-  const results = calculateMetabolism(weight, height, age, gender, activity, goalType);
-
-  const tdeeEl = document.getElementById('preview-tdee');
-  const targetKcalEl = document.getElementById('preview-target-kcal');
-  const macrosEl = document.getElementById('preview-macros');
-
-  if (tdeeEl) tdeeEl.innerText = `${results.tdee.toLocaleString()} kcal`;
-  if (targetKcalEl) targetKcalEl.innerText = `${results.targetCalories.toLocaleString()} kcal/día`;
-  if (macrosEl) macrosEl.innerText = `P: ${results.targetProtein}g | C: ${results.targetCarbs}g | G: ${results.targetFat}g`;
+  // Función mantenida vacía para no romper listeners existentes
 }
 
 function saveProfileAndCalculate() {
-  const weight = parseFloat(document.getElementById('profile-current-weight').value) || 75;
-  const height = parseFloat(document.getElementById('profile-height').value) || 175;
-  const age = parseInt(document.getElementById('profile-age').value) || 25;
-  const gender = document.getElementById('profile-gender').value || 'male';
+  const weight   = parseFloat(document.getElementById('profile-current-weight').value) || 75;
+  const height   = parseFloat(document.getElementById('profile-height').value) || 175;
+  const age      = parseInt(document.getElementById('profile-age').value) || 25;
+  const gender   = document.getElementById('profile-gender').value || 'male';
   const activity = parseFloat(document.getElementById('profile-activity').value) || 1.55;
-  const goalType = document.getElementById('profile-goal-type').value || 'surplus';
-  const targetWeight = parseFloat(document.getElementById('profile-target-weight').value) || (weight + 5);
-
-  const results = calculateMetabolism(weight, height, age, gender, activity, goalType);
 
   const profile = {
     name: document.getElementById('profile-name').value.trim() || 'Atleta',
@@ -1789,19 +1698,12 @@ function saveProfileAndCalculate() {
     age,
     height,
     weight,
-    targetWeight,
-    activityLevel: activity,
-    goalType,
-    targetCalories: results.targetCalories,
-    targetProtein: results.targetProtein,
-    targetCarbs: results.targetCarbs,
-    targetFat: results.targetFat
+    activityLevel: activity
   };
 
   DB.saveProfile(profile);
   loadProfile();
-  renderNutritionOverview();
-  showToast(`Metas calculadas: ${results.targetCalories} kcal diarias`);
+  showToast('Perfil guardado ✓');
 }
 
 function renderWeightHistory() {
@@ -1925,7 +1827,7 @@ function setupEventListeners() {
     saveProfileAndCalculate();
   });
 
-  ['profile-current-weight', 'profile-height', 'profile-age', 'profile-gender', 'profile-activity', 'profile-goal-type'].forEach(id => {
+  ['profile-current-weight', 'profile-height', 'profile-age', 'profile-gender', 'profile-activity'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', updateProfileCalculationsPreview);
   });

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IronTrack - Gym, Meals & Records</title>
+  <title>IronTrack - Gym & Records</title>
   <meta name="theme-color" content="#090514">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -151,106 +151,6 @@
       </div>
     </section>
 
-    <!-- 2. TAB: NUTRICIÓN Y SEGUIMIENTO DE COMIDAS -->
-    <section id="tab-nutrition" class="tab-content hidden space-y-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-white flex items-center space-x-2">
-            <span>Nutrición & Kcal</span>
-            <span class="w-2 h-2 rounded-full bg-fuchsia-500 shadow-[0_0_8px_#ec4899]"></span>
-          </h2>
-          <p class="text-xs text-purple-300/70">Control de calorías, macronutrientes y peso meta</p>
-        </div>
-        <div class="flex items-center space-x-2">
-          <input type="date" id="nutrition-view-date" class="bg-[#170e28] border border-[#321a52] rounded-xl px-2.5 py-1 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-        </div>
-      </div>
-
-      <!-- Daily Calories Summary Card -->
-      <div class="bg-gradient-to-br from-[#110a1f] via-[#160d2b] to-[#200f38] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-[10px] uppercase font-bold tracking-wider text-purple-400">Plan Nutricional Calculado</span>
-            <h3 id="nutrition-goal-badge" class="text-sm font-extrabold text-white flex items-center space-x-1.5">
-              <span>Superávit Calórico</span>
-              <span class="text-[11px] text-fuchsia-400 font-normal">(Meta: 82.0 kg)</span>
-            </h3>
-          </div>
-          <button id="btn-recalc-target-modal" class="px-2.5 py-1 rounded-xl bg-[#20103b] hover:bg-[#2d1652] border border-[#3d1a6b] text-[11px] text-purple-300 font-semibold flex items-center space-x-1">
-            <i data-lucide="calculator" class="w-3.5 h-3.5 text-fuchsia-400"></i>
-            <span>Ajustar Metas</span>
-          </button>
-        </div>
-
-        <div class="bg-[#0e071c] p-3.5 rounded-2xl border border-[#26133f] space-y-2">
-          <div class="flex justify-between items-baseline">
-            <div>
-              <p class="text-[10px] text-purple-400/80 uppercase font-semibold">Consumidas</p>
-              <p class="text-2xl font-black text-white tracking-tight"><span id="diet-consumed-kcal">0</span> <span class="text-xs font-normal text-purple-400">kcal</span></p>
-            </div>
-            <div class="text-center">
-              <p class="text-[10px] text-purple-400/80 uppercase font-semibold">Restantes</p>
-              <p class="text-xl font-extrabold text-fuchsia-400 tracking-tight" id="diet-remaining-kcal">0</p>
-            </div>
-            <div class="text-right">
-              <p class="text-[10px] text-purple-400/80 uppercase font-semibold">Objetivo</p>
-              <p class="text-base font-bold text-purple-300" id="diet-target-kcal">2,650</p>
-            </div>
-          </div>
-
-          <div class="w-full bg-[#1b1030] rounded-full h-3 overflow-hidden p-0.5 border border-[#351859]">
-            <div id="diet-kcal-progress-bar" class="bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 h-full rounded-full transition-all duration-500 shadow-[0_0_10px_#ec4899]" style="width: 0%"></div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2 text-center text-xs">
-          <div class="bg-[#150c26] p-2.5 rounded-2xl border border-[#2b1649]">
-            <span class="text-[10px] text-purple-400/80 font-bold block">Proteína</span>
-            <p class="font-extrabold text-white text-sm my-0.5"><span id="macro-prot-consumed">0</span> <span class="text-[10px] text-purple-400 font-normal">/ <span id="macro-prot-target">160</span>g</span></p>
-            <div class="w-full bg-[#201138] rounded-full h-1.5 overflow-hidden mt-1">
-              <div id="macro-prot-bar" class="bg-purple-400 h-full rounded-full" style="width: 0%"></div>
-            </div>
-          </div>
-
-          <div class="bg-[#150c26] p-2.5 rounded-2xl border border-[#2b1649]">
-            <span class="text-[10px] text-purple-400/80 font-bold block">Carbohidratos</span>
-            <p class="font-extrabold text-white text-sm my-0.5"><span id="macro-carbs-consumed">0</span> <span class="text-[10px] text-purple-400 font-normal">/ <span id="macro-carbs-target">320</span>g</span></p>
-            <div class="w-full bg-[#201138] rounded-full h-1.5 overflow-hidden mt-1">
-              <div id="macro-carbs-bar" class="bg-fuchsia-400 h-full rounded-full" style="width: 0%"></div>
-            </div>
-          </div>
-
-          <div class="bg-[#150c26] p-2.5 rounded-2xl border border-[#2b1649]">
-            <span class="text-[10px] text-purple-400/80 font-bold block">Grasas</span>
-            <p class="font-extrabold text-white text-sm my-0.5"><span id="macro-fat-consumed">0</span> <span class="text-[10px] text-purple-400 font-normal">/ <span id="macro-fat-target">70</span>g</span></p>
-            <div class="w-full bg-[#201138] rounded-full h-1.5 overflow-hidden mt-1">
-              <div id="macro-fat-bar" class="bg-pink-400 h-full rounded-full" style="width: 0%"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2">
-        <button id="btn-open-food-search-modal" class="py-2.5 px-3 rounded-2xl bg-[#170e28] hover:bg-[#23143d] border border-[#2e184c] text-xs font-bold text-white flex items-center justify-center space-x-1.5 transition">
-          <i data-lucide="utensils" class="w-4 h-4 text-fuchsia-400"></i>
-          <span>Buscar Alimento</span>
-        </button>
-        <button id="btn-open-quick-calorie-modal" class="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-xs font-bold text-white flex items-center justify-center space-x-1.5 shadow-md shadow-purple-950 transition">
-          <i data-lucide="zap" class="w-4 h-4"></i>
-          <span>Calorías Directas</span>
-        </button>
-      </div>
-
-      <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-3">
-        <div class="flex items-center justify-between border-b border-[#23123b] pb-2">
-          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Comidas Registradas del Día</h3>
-          <span id="meals-count-badge" class="text-[11px] text-purple-300/70">0 registros</span>
-        </div>
-        <div id="today-meals-list" class="space-y-2">
-          <!-- Rendered dynamically -->
-        </div>
-      </div>
-    </section>
 
     <!-- 3. TAB: SESIÓN / ENTRENAR -->
     <section id="tab-workout" class="tab-content hidden space-y-4">
@@ -569,7 +469,7 @@
 
   <!-- BOTTOM NAVIGATION BAR (Mobile First) -->
   <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0d071a]/95 backdrop-blur-md border-t border-[#24133b] max-w-lg mx-auto shadow-2xl">
-    <div class="grid grid-cols-5 py-2">
+    <div class="grid grid-cols-4 py-2">
       <button data-target="tab-calendar" class="nav-item active flex flex-col items-center justify-center text-purple-400 transition">
         <i data-lucide="calendar" class="w-5 h-5"></i>
         <span class="text-[10px] font-semibold mt-1">Calendario</span>
@@ -577,10 +477,6 @@
       <button data-target="tab-workout" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
         <i data-lucide="dumbbell" class="w-5 h-5"></i>
         <span class="text-[10px] font-semibold mt-1">Entrenar</span>
-      </button>
-      <button data-target="tab-nutrition" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
-        <i data-lucide="utensils" class="w-5 h-5"></i>
-        <span class="text-[10px] font-semibold mt-1">Comidas</span>
       </button>
       <button data-target="tab-charts" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
         <i data-lucide="line-chart" class="w-5 h-5"></i>
@@ -598,25 +494,18 @@
   <!-- ========================================== -->
   <div id="modal-onboarding" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-[#110a1f] border border-[#3b1b66] rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl animate-fade-in relative max-h-[92vh] overflow-y-auto">
-      
-      <!-- Stepper Indicator -->
-      <div class="flex items-center justify-between pb-3 border-b border-[#24133b]">
-        <div class="flex items-center space-x-2">
-          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center text-xs font-black text-white">
-            IT
-          </div>
-          <span class="text-xs font-bold text-white tracking-wide">Bienvenido a IronTrack</span>
-        </div>
-        <div class="flex items-center space-x-1 text-[11px] font-bold text-fuchsia-400">
-          <span>Paso <span id="onboard-step-num">1</span> de 2</span>
-        </div>
+
+      <!-- Header -->
+      <div class="flex items-center space-x-2 pb-3 border-b border-[#24133b]">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center text-xs font-black text-white">IT</div>
+        <span class="text-xs font-bold text-white tracking-wide">Bienvenido a IronTrack</span>
       </div>
 
-      <!-- PASO 1: DATOS PERSONALES BÁSICOS -->
-      <div id="onboard-step-1" class="space-y-4">
+      <!-- Datos básicos -->
+      <div class="space-y-4">
         <div>
           <h3 class="text-base font-bold text-white">Tus Datos Personales</h3>
-          <p class="text-xs text-purple-300/70">Introduce tus datos para calcular tu metabolismo y consumo calórico.</p>
+          <p class="text-xs text-purple-300/70 mt-0.5">Solo necesitamos lo básico para empezar.</p>
         </div>
 
         <div class="space-y-3">
@@ -626,13 +515,6 @@
           </div>
 
           <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Género biológico</label>
-              <select id="ob-gender" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
-                <option value="male">Hombre</option>
-                <option value="female">Mujer</option>
-              </select>
-            </div>
             <div>
               <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Edad (años) *</label>
               <input type="number" id="ob-age" placeholder="25" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
@@ -645,77 +527,19 @@
               <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Peso Actual (kg) *</label>
               <input type="number" step="0.1" id="ob-current-weight" placeholder="75.0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
             </div>
-          </div>
-
-          <div>
-            <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nivel de Actividad Física Habitual</label>
-            <select id="ob-activity" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
-              <option value="1.2">Sedentario (Trabajo de oficina / poco movimiento)</option>
-              <option value="1.375">Ligero (Entreno 1-3 días por semana)</option>
-              <option value="1.55" selected>Moderado (Gym 3-5 días por semana)</option>
-              <option value="1.725">Fuerte (Gym intenso 6-7 días)</option>
-            </select>
+            <div>
+              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Género biológico</label>
+              <select id="ob-gender" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+                <option value="male">Hombre</option>
+                <option value="female">Mujer</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <button id="btn-ob-next-1" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-purple-950 transition">
-          Continuar: Elegir Objetivo →
+        <button id="btn-ob-finish-simple" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-purple-950 transition">
+          Empezar 🚀
         </button>
-      </div>
-
-      <!-- PASO 2: OBJETIVO Y PESO IDEAL -->
-      <div id="onboard-step-2" class="space-y-4 hidden">
-        <div>
-          <h3 class="text-base font-bold text-white">¿Cuál es tu Objetivo Principal?</h3>
-          <p class="text-xs text-purple-300/70">Calcularemos tus calorías y macronutrientes idóneos automáticamente.</p>
-        </div>
-
-        <div class="space-y-2.5">
-          <label class="ob-goal-card cursor-pointer p-3 rounded-2xl border border-purple-500 bg-purple-950/40 flex items-center space-x-3 transition">
-            <input type="radio" name="ob-goal" value="surplus" checked class="text-purple-600 focus:ring-0">
-            <div>
-              <p class="text-xs font-bold text-white flex items-center space-x-1.5">
-                <span>Ganar Masa Muscular (Superávit)</span>
-                <span class="text-[9px] bg-purple-500/30 text-fuchsia-300 px-1.5 py-0.5 rounded font-mono">+380 kcal</span>
-              </p>
-              <p class="text-[10px] text-purple-300/70">Aumento de volumen limpio y fuerza en los entrenamientos.</p>
-            </div>
-          </label>
-
-          <label class="ob-goal-card cursor-pointer p-3 rounded-2xl border border-[#2f184e] bg-[#170e28] flex items-center space-x-3 transition">
-            <input type="radio" name="ob-goal" value="deficit" class="text-purple-600 focus:ring-0">
-            <div>
-              <p class="text-xs font-bold text-white flex items-center space-x-1.5">
-                <span>Perder Grasa / Definición (Déficit)</span>
-                <span class="text-[9px] bg-rose-500/30 text-rose-300 px-1.5 py-0.5 rounded font-mono">-450 kcal</span>
-              </p>
-              <p class="text-[10px] text-purple-300/70">Reducir porcentaje graso preservando tu masa magra.</p>
-            </div>
-          </label>
-
-          <label class="ob-goal-card cursor-pointer p-3 rounded-2xl border border-[#2f184e] bg-[#170e28] flex items-center space-x-3 transition">
-            <input type="radio" name="ob-goal" value="maintenance" class="text-purple-600 focus:ring-0">
-            <div>
-              <p class="text-xs font-bold text-white">Mantener Peso / Rendimiento</p>
-              <p class="text-[10px] text-purple-300/70">Comer las mismas calorías que gastas en el día a día.</p>
-            </div>
-          </label>
-        </div>
-
-        <div>
-          <label class="text-[11px] font-bold text-fuchsia-400 block mb-1">¿Qué peso ideal deseas alcanzar? (kg) *</label>
-          <input type="number" step="0.1" id="ob-target-weight" placeholder="80.0" class="w-full bg-[#170e28] border border-fuchsia-500/60 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-fuchsia-400">
-          <p class="text-[10px] text-purple-400/60 mt-1">Te servirá de referencia en tus gráficos de evolución corporal.</p>
-        </div>
-
-        <div class="flex items-center space-x-2 pt-1">
-          <button id="btn-ob-back-2" class="w-1/3 py-2.5 rounded-xl bg-[#1b1030] hover:bg-[#251545] text-purple-300 font-bold text-xs border border-[#321a52]">
-            ← Volver
-          </button>
-          <button id="btn-ob-finish-simple" class="w-2/3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-purple-700 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-purple-950 transition">
-            Completar Perfil 🚀
-          </button>
-        </div>
       </div>
 
     </div>
