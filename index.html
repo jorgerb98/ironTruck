@@ -12,6 +12,11 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="IronTrack">
 
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
   <!-- Tailwind CSS & Lucide Icons & Chart.js -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -45,30 +50,36 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#07040d] text-purple-100 min-h-screen flex flex-col font-sans select-none antialiased pb-20">
+<body class="text-purple-100 min-h-screen flex flex-col antialiased selection:bg-fuchsia-500 selection:text-white pb-24">
 
   <!-- TOP HEADER -->
-  <header class="sticky top-0 z-40 bg-[#0d071a]/90 backdrop-blur-md border-b border-[#24133b] px-4 py-3 flex items-center justify-between shadow-lg shadow-purple-950/20">
-    <div class="flex items-center space-x-2.5">
-      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-700 via-purple-600 to-fuchsia-500 flex items-center justify-center font-black text-white shadow-md shadow-purple-900/50 text-sm">
-        IT
+  <header class="sticky top-0 z-40 bg-[#0a0515]/85 backdrop-blur-xl border-b border-purple-500/15 px-4 py-3 shadow-lg shadow-black/40">
+    <div class="max-w-lg mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="relative w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-fuchsia-600 to-pink-500 flex items-center justify-center font-black text-white shadow-lg shadow-purple-950/60 ring-1 ring-white/20">
+          <span class="text-xs font-black tracking-tighter">IT</span>
+          <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0a0515]"></span>
+        </div>
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <h1 class="text-sm font-black tracking-tight text-white">IronTrack</h1>
+            <span class="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-md bg-purple-500/20 text-fuchsia-300 border border-purple-500/30">PRO</span>
+          </div>
+          <p class="text-[11px] text-purple-300/70 font-medium" id="header-user-status">Cargando...</p>
+        </div>
       </div>
-      <div>
-        <h1 class="text-base font-extrabold tracking-tight bg-gradient-to-r from-purple-200 via-purple-100 to-fuchsia-300 bg-clip-text text-transparent">IronTrack</h1>
-        <p class="text-[10px] text-purple-300/70 font-medium" id="header-user-status">Cargando...</p>
+      <div class="flex items-center space-x-1.5">
+        <button id="btn-open-profile-quick" data-target="tab-profile" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition hover:border-purple-400/40" title="Ver Perfil">
+          <i data-lucide="user" class="w-4 h-4"></i>
+        </button>
+        <button id="btn-export-data" title="Copia de seguridad" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition hover:border-purple-400/40">
+          <i data-lucide="download" class="w-4 h-4"></i>
+        </button>
+        <label for="import-file-input" title="Restaurar copia" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition hover:border-purple-400/40 cursor-pointer">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+        </label>
+        <input type="file" id="import-file-input" accept=".json" class="hidden">
       </div>
-    </div>
-    <div class="flex items-center space-x-2">
-      <button id="btn-open-profile-quick" data-target="tab-profile" class="p-2 rounded-xl bg-[#170e28] hover:bg-[#23143d] border border-[#2e194a] text-purple-300 transition" title="Ver Perfil y Metas">
-        <i data-lucide="user" class="w-4 h-4"></i>
-      </button>
-      <button id="btn-export-data" title="Copia de seguridad" class="p-2 rounded-xl bg-[#170e28] hover:bg-[#23143d] border border-[#2e194a] text-purple-300 transition">
-        <i data-lucide="download" class="w-4 h-4"></i>
-      </button>
-      <label for="import-file-input" title="Restaurar copia" class="p-2 rounded-xl bg-[#170e28] hover:bg-[#23143d] border border-[#2e194a] text-purple-300 transition cursor-pointer">
-        <i data-lucide="upload" class="w-4 h-4"></i>
-      </label>
-      <input type="file" id="import-file-input" accept=".json" class="hidden">
     </div>
   </header>
 
@@ -79,34 +90,34 @@
     <section id="tab-calendar" class="tab-content space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+          <h2 class="text-lg font-black text-white tracking-tight flex items-center space-x-2">
             <span>Calendario de Entrenos</span>
-            <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
+            <span class="w-2 h-2 rounded-full bg-fuchsia-400 shadow-[0_0_8px_#d946ef]"></span>
           </h2>
-          <p class="text-xs text-purple-300/70">Pulsa cualquier día para ver o registrar la sesión</p>
+          <p class="text-xs text-purple-300/70 font-medium">Pulsa cualquier día para ver o registrar la sesión</p>
         </div>
-        <button id="btn-quick-new-workout" class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-xs font-bold text-white shadow-md shadow-purple-900/40">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        <button id="btn-quick-new-workout" class="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-xs font-black text-white shadow-lg shadow-purple-950/60 active:scale-95 transition">
+          <i data-lucide="plus" class="w-3.5 h-3.5 stroke-[2.5]"></i>
           <span>Entrenar hoy</span>
         </button>
       </div>
 
       <!-- Calendar Container Card -->
-      <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl">
+      <div class="glass-card rounded-3xl p-4.5 sm:p-5 shadow-2xl">
         <div class="flex items-center justify-between mb-3 px-1">
-          <button id="btn-prev-month" class="p-1.5 rounded-xl bg-[#1a0f30] hover:bg-[#251545] border border-[#301952] text-purple-300 transition">
+          <button id="btn-prev-month" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition hover:border-purple-400/40">
             <i data-lucide="chevron-left" class="w-4 h-4"></i>
           </button>
           <div class="text-center">
-            <h3 id="calendar-month-year" class="text-sm font-bold text-white capitalize tracking-wide">Mes Año</h3>
-            <p id="calendar-stats-summary" class="text-[10px] text-fuchsia-400 font-semibold">0 entrenos este mes</p>
+            <h3 id="calendar-month-year" class="text-sm font-black text-white capitalize tracking-wide">Mes Año</h3>
+            <p id="calendar-stats-summary" class="text-[10px] text-fuchsia-400 font-bold mono">0 entrenos este mes</p>
           </div>
-          <button id="btn-next-month" class="p-1.5 rounded-xl bg-[#1a0f30] hover:bg-[#251545] border border-[#301952] text-purple-300 transition">
+          <button id="btn-next-month" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition hover:border-purple-400/40">
             <i data-lucide="chevron-right" class="w-4 h-4"></i>
           </button>
         </div>
 
-        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-purple-400/80 uppercase mb-2">
+        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-purple-300/70 uppercase mb-2 tracking-wider">
           <span>Lun</span>
           <span>Mar</span>
           <span>Mié</span>
@@ -120,28 +131,28 @@
           <!-- Filled dynamically by JS -->
         </div>
 
-        <div class="flex items-center justify-center space-x-4 pt-3 mt-3 border-t border-[#23123b] text-[11px] text-purple-300/70">
+        <div class="flex items-center justify-center space-x-4 pt-3 mt-3 border-t border-purple-500/15 text-[11px] text-purple-300/70">
           <div class="flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_6px_#a855f7]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-purple-500 to-fuchsia-500 shadow-[0_0_8px_#d946ef]"></span>
             <span>Día entrenado</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full border border-pink-500"></span>
+            <span class="w-2.5 h-2.5 rounded-full border-2 border-pink-400"></span>
             <span>Hoy</span>
           </div>
         </div>
       </div>
 
       <!-- Selected Day Details & Sessions List -->
-      <div id="calendar-day-details" class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-3">
-        <div class="flex items-center justify-between border-b border-[#23123b] pb-2.5">
+      <div id="calendar-day-details" class="glass-card rounded-3xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-purple-500/15 pb-2.5">
           <div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-fuchsia-400">Detalle del Día</span>
+            <span class="text-[10px] font-black uppercase tracking-wider text-fuchsia-400">Detalle del Día</span>
             <h3 id="selected-date-title" class="text-sm font-bold text-white capitalize">Fecha seleccionada</h3>
           </div>
-          <button id="btn-add-workout-on-selected-date" class="px-3 py-1.5 rounded-xl bg-purple-700/80 hover:bg-purple-600 text-purple-100 text-xs font-semibold flex items-center space-x-1 border border-purple-500/30">
+          <button id="btn-add-workout-on-selected-date" class="px-3 py-1.5 rounded-xl glass-pill hover:bg-purple-600/30 text-fuchsia-300 hover:text-white text-xs font-bold flex items-center space-x-1.5 transition">
             <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i>
-            <span>Registrar entreno aquí</span>
+            <span>Registrar entreno</span>
           </button>
         </div>
 
@@ -156,46 +167,49 @@
     <section id="tab-workout" class="tab-content hidden space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-bold text-white">Registro de Sesión</h2>
-          <p class="text-xs text-purple-300/70">Anota tus series, pesos y reps de hoy</p>
+          <h2 class="text-lg font-black text-white tracking-tight flex items-center space-x-2">
+            <span>Registro de Sesión</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
+          </h2>
+          <p class="text-xs text-purple-300/70 font-medium">Anota tus series, pesos y reps de hoy</p>
         </div>
-        <button id="btn-quick-timer" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#180e2a] border border-[#37195c] text-xs text-purple-300 font-semibold shadow hover:bg-[#23133d]">
+        <button id="btn-quick-timer" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-2xl glass-pill text-xs text-purple-200 font-semibold shadow hover:text-white transition">
           <i data-lucide="timer" class="w-3.5 h-3.5 text-fuchsia-400"></i>
-          <span id="timer-display">Descanso: 90s</span>
+          <span id="timer-display" class="mono font-bold">Descanso: 90s</span>
         </button>
       </div>
 
       <!-- Quick Session Details Form -->
-      <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl p-4 shadow-lg space-y-3">
+      <div class="glass-card rounded-3xl p-4 shadow-xl space-y-3.5">
         <!-- Selector de Rutinas Plantilla Guardadas -->
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider">Cargar Rutina Predefinida</label>
-            <button id="btn-open-create-routine-modal" class="text-[10px] text-fuchsia-400 hover:text-fuchsia-300 font-bold flex items-center space-x-1">
+            <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider">Cargar Rutina Predefinida</label>
+            <button id="btn-open-create-routine-modal" class="text-[10px] text-fuchsia-400 hover:text-fuchsia-300 font-bold flex items-center space-x-1 transition">
               <i data-lucide="plus" class="w-3 h-3"></i>
               <span>Crear Rutina Completa</span>
             </button>
           </div>
           <div class="flex flex-col sm:flex-row gap-2">
-            <select id="workout-routine-preset" class="w-full sm:flex-1 min-w-0 bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2.5 text-xs text-purple-100 focus:outline-none focus:border-purple-500 truncate">
+            <select id="workout-routine-preset" class="w-full sm:flex-1 min-w-0 bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2.5 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 truncate">
               <option value="">-- Elige una rutina para cargar sus ejercicios --</option>
               <!-- Filled with routines -->
             </select>
-            <button id="btn-load-routine-preset" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-md flex items-center justify-center space-x-1.5 flex-shrink-0">
-              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+            <button id="btn-load-routine-preset" class="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:opacity-95 text-white text-xs font-black transition shadow-lg shadow-purple-950 flex items-center justify-center space-x-1.5 flex-shrink-0 active:scale-95">
+              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
               <span>Cargar Rutina</span>
             </button>
           </div>
         </div>
 
-        <div class="flex items-center space-x-3 pt-2 border-t border-[#23123b]">
+        <div class="flex items-center space-x-3 pt-3 border-t border-purple-500/15">
           <div class="flex-1">
-            <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1">Fecha</label>
-            <input type="date" id="workout-date" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Fecha</label>
+            <input type="date" id="workout-date" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 mono">
           </div>
           <div class="flex-1">
-            <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1">Nombre Sesión</label>
-            <input type="text" id="workout-tag" placeholder="Ej: Día 1 - Torso" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+            <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Nombre Sesión</label>
+            <input type="text" id="workout-tag" placeholder="Ej: Día 1 - Torso" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 font-medium">
           </div>
         </div>
       </div>
@@ -204,14 +218,14 @@
         <!-- Rendered dynamically -->
       </div>
 
-      <button id="btn-open-exercise-picker" class="w-full py-3.5 px-4 rounded-xl border border-dashed border-[#3e1f6e] bg-[#140b24]/50 hover:bg-[#1f1038] text-purple-300 font-semibold flex items-center justify-center space-x-2 transition">
+      <button id="btn-open-exercise-picker" class="w-full py-3.5 px-4 rounded-2xl border border-dashed border-purple-500/40 bg-purple-950/20 hover:bg-purple-900/30 text-purple-200 font-bold flex items-center justify-center space-x-2 transition active:scale-[0.99]">
         <i data-lucide="plus-circle" class="w-5 h-5 text-fuchsia-400"></i>
         <span>Añadir Ejercicio Individual</span>
       </button>
 
-      <button id="btn-save-workout" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-purple-700 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold shadow-lg shadow-purple-900/40 flex items-center justify-center space-x-2 transition active:scale-[0.98]">
+      <button id="btn-save-workout" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black shadow-xl shadow-purple-950/60 flex items-center justify-center space-x-2 transition active:scale-[0.98]">
         <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-        <span>Guardar Sesión Completada</span>
+        <span class="tracking-wide">Guardar Sesión Completada</span>
       </button>
     </section>
 
@@ -219,25 +233,28 @@
     <section id="tab-history" class="tab-content hidden space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-bold text-white">Historial de Entrenamientos</h2>
-          <p class="text-xs text-purple-300/70">Consulta tus sesiones pasadas y marcas obtenidas</p>
+          <h2 class="text-lg font-black text-white tracking-tight flex items-center space-x-2">
+            <span>Historial de Entrenamientos</span>
+            <span class="w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></span>
+          </h2>
+          <p class="text-xs text-purple-300/70 font-medium">Consulta tus sesiones pasadas y marcas obtenidas</p>
         </div>
       </div>
 
       <div class="relative">
-        <input type="text" id="history-search" placeholder="Filtrar por ejercicio o rutina..." class="w-full bg-[#110a1f] border border-[#2a1645] rounded-xl pl-9 pr-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
-        <i data-lucide="search" class="w-4 h-4 text-purple-400 absolute left-3 top-2.5"></i>
+        <input type="text" id="history-search" placeholder="Filtrar por ejercicio o rutina..." class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl pl-10 pr-3 py-2.5 text-xs text-purple-100 placeholder-purple-300/40 focus:outline-none focus:border-fuchsia-400">
+        <i data-lucide="search" class="w-4 h-4 text-purple-400 absolute left-3.5 top-3"></i>
       </div>
 
-      <div class="bg-gradient-to-br from-[#110a1f] via-[#160d2b] to-[#1f0f3d] border border-[#2a1645] rounded-2xl p-4 shadow-lg">
+      <div class="glass-card rounded-3xl p-4.5 shadow-xl">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center space-x-2">
-            <span class="p-1.5 rounded-lg bg-fuchsia-500/10 text-fuchsia-400">
-              <i data-lucide="trophy" class="w-4 h-4"></i>
+            <span class="w-7 h-7 rounded-xl bg-gradient-to-tr from-amber-500/20 to-fuchsia-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300">
+              <i data-lucide="trophy" class="w-3.5 h-3.5"></i>
             </span>
-            <h3 class="text-sm font-bold text-white">Mejores Marcas (PRs)</h3>
+            <h3 class="text-xs font-black uppercase tracking-wider text-white">Mejores Marcas (PRs)</h3>
           </div>
-          <span class="text-[11px] text-purple-300/70" id="pr-count">0 récords</span>
+          <span class="text-[11px] text-fuchsia-400 font-bold mono" id="pr-count">0 récords</span>
         </div>
         <div id="prs-list" class="grid grid-cols-2 gap-2 text-xs">
           <!-- Filled dynamically -->
@@ -252,14 +269,17 @@
     <!-- 5. TAB: GRÁFICOS Y MÉTRICAS -->
     <section id="tab-charts" class="tab-content hidden space-y-4">
       <div>
-        <h2 class="text-lg font-bold text-white">Progreso & Estadísticas</h2>
-        <p class="text-xs text-purple-300/70">Evolución de volumen, marcas y peso corporal</p>
+        <h2 class="text-lg font-black text-white tracking-tight flex items-center space-x-2">
+          <span>Progreso &amp; Estadísticas</span>
+          <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+        </h2>
+        <p class="text-xs text-purple-300/70 font-medium">Evolución de volumen, marcas y peso corporal</p>
       </div>
 
-      <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl p-4 space-y-4 shadow-lg">
+      <div class="glass-card rounded-3xl p-4.5 space-y-4 shadow-xl">
         <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5">Métrica a Visualizar</label>
-          <select id="chart-metric-type" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1.5">Métrica a Visualizar</label>
+          <select id="chart-metric-type" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2.5 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
             <option value="volume">Volumen Total por Sesión (Kg totales movidos)</option>
             <option value="exercise-weight">Carga Máxima por Ejercicio (Kg)</option>
             <option value="exercise-1rm">1RM Estimado por Ejercicio (Kg)</option>
@@ -268,32 +288,32 @@
         </div>
 
         <div id="chart-routine-select-container">
-          <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5">Filtrar por Rutina / Sesión</label>
-          <select id="chart-routine-select" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1.5">Filtrar por Rutina / Sesión</label>
+          <select id="chart-routine-select" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2.5 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
             <option value="all">Todas las Sesiones</option>
             <!-- Populated via JS -->
           </select>
         </div>
 
         <div id="chart-exercise-select-container" class="hidden">
-          <label class="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5">Seleccionar Ejercicio</label>
-          <select id="chart-exercise-select" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1.5">Seleccionar Ejercicio</label>
+          <select id="chart-exercise-select" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2.5 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
             <!-- Populated via JS -->
           </select>
         </div>
 
-        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-[#23123b] text-center">
-          <div class="bg-[#180e2a] p-2 rounded-xl border border-[#2b1649]">
-            <p class="text-[10px] text-purple-400/80">Total Sesiones</p>
-            <p id="stat-total-workouts" class="text-base font-bold text-white">0</p>
+        <div class="grid grid-cols-3 gap-2.5 pt-2 border-t border-purple-500/15 text-center">
+          <div class="glass-pill p-2.5 rounded-2xl">
+            <p class="text-[9px] uppercase font-extrabold tracking-wider text-purple-300/70">Sesiones</p>
+            <p id="stat-total-workouts" class="text-base font-black text-white mono mt-0.5">0</p>
           </div>
-          <div class="bg-[#180e2a] p-2 rounded-xl border border-[#2b1649]">
-            <p class="text-[10px] text-purple-400/80">Kg Totales</p>
-            <p id="stat-total-volume" class="text-base font-bold text-fuchsia-400">0 kg</p>
+          <div class="glass-pill p-2.5 rounded-2xl">
+            <p class="text-[9px] uppercase font-extrabold tracking-wider text-purple-300/70">Kg Totales</p>
+            <p id="stat-total-volume" class="text-base font-black text-fuchsia-400 mono mt-0.5">0 kg</p>
           </div>
-          <div class="bg-[#180e2a] p-2 rounded-xl border border-[#2b1649]">
-            <p class="text-[10px] text-purple-400/80">Media / Sesión</p>
-            <p id="stat-avg-volume" class="text-base font-bold text-purple-300">0 kg</p>
+          <div class="glass-pill p-2.5 rounded-2xl">
+            <p class="text-[9px] uppercase font-extrabold tracking-wider text-purple-300/70">Media / Sesión</p>
+            <p id="stat-avg-volume" class="text-base font-black text-purple-200 mono mt-0.5">0 kg</p>
           </div>
         </div>
 
@@ -307,15 +327,18 @@
     <section id="tab-exercises" class="tab-content hidden space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-bold text-white">Biblioteca & Rutinas</h2>
-          <p class="text-xs text-purple-300/70">Crea tus plantillas por días y gestiona tus ejercicios</p>
+          <h2 class="text-lg font-black text-white tracking-tight flex items-center space-x-2">
+            <span>Biblioteca &amp; Rutinas</span>
+            <span class="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_#c084fc]"></span>
+          </h2>
+          <p class="text-xs text-purple-300/70 font-medium">Crea tus plantillas por días y gestiona tus ejercicios</p>
         </div>
         <div class="flex items-center space-x-1.5">
-          <button id="btn-create-routine-tab" class="px-2.5 py-1.5 rounded-xl bg-purple-700/80 hover:bg-purple-600 text-xs font-semibold text-white flex items-center space-x-1 border border-purple-500/30">
+          <button id="btn-create-routine-tab" class="px-3 py-2 rounded-2xl glass-pill hover:bg-purple-600/30 text-xs font-bold text-white flex items-center space-x-1.5 transition">
             <i data-lucide="layers" class="w-3.5 h-3.5 text-fuchsia-400"></i>
             <span>Crear Rutina</span>
           </button>
-          <button id="btn-create-custom-exercise" class="px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-semibold text-white flex items-center space-x-1 shadow-md shadow-purple-900/40">
+          <button id="btn-create-custom-exercise" class="px-3 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:opacity-95 text-xs font-black text-white flex items-center space-x-1.5 shadow-md shadow-purple-950 active:scale-95 transition">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>Ejercicio</span>
           </button>
@@ -323,33 +346,33 @@
       </div>
 
       <!-- Rutinas Guardadas Box -->
-      <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl p-4 shadow space-y-2.5">
+      <div class="glass-card rounded-3xl p-4.5 shadow-xl space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
+          <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center space-x-2">
             <i data-lucide="folder" class="w-4 h-4 text-fuchsia-400"></i>
             <span>Mis Días / Rutinas Guardadas</span>
           </h3>
-          <span id="routines-count-badge" class="text-[10px] text-purple-400">0 plantillas</span>
+          <span id="routines-count-badge" class="text-[10px] text-fuchsia-300 font-bold mono">0 plantillas</span>
         </div>
-        <div id="routines-list-container" class="space-y-2">
+        <div id="routines-list-container" class="space-y-2.5">
           <!-- Populated by JS -->
         </div>
       </div>
 
-      <div class="space-y-2">
+      <div class="space-y-2.5">
         <div class="relative">
-          <input type="text" id="exercise-search-input" placeholder="Buscar ejercicio por nombre..." class="w-full bg-[#110a1f] border border-[#2a1645] rounded-xl pl-9 pr-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
-          <i data-lucide="search" class="w-4 h-4 text-purple-400 absolute left-3 top-2.5"></i>
+          <input type="text" id="exercise-search-input" placeholder="Buscar ejercicio por nombre..." class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl pl-10 pr-3 py-2.5 text-xs text-purple-100 placeholder-purple-300/40 focus:outline-none focus:border-fuchsia-400">
+          <i data-lucide="search" class="w-4 h-4 text-purple-400 absolute left-3.5 top-3"></i>
         </div>
-        <div id="exercise-category-pills" class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
-          <button data-cat="all" class="cat-pill active px-3 py-1 rounded-full bg-purple-600 text-white font-medium whitespace-nowrap shadow-sm shadow-purple-900">Todos</button>
-          <button data-cat="Pecho" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Pecho</button>
-          <button data-cat="Espalda" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Espalda</button>
-          <button data-cat="Piernas" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Piernas</button>
-          <button data-cat="Hombros" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Hombros</button>
-          <button data-cat="Brazos" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Brazos</button>
-          <button data-cat="Core" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Core</button>
-          <button data-cat="custom" class="cat-pill px-3 py-1 rounded-full bg-[#170e28] text-purple-300 whitespace-nowrap hover:bg-[#23143d] border border-[#2c174a]">Mis Ejercicios</button>
+        <div id="exercise-category-pills" class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+          <button data-cat="all" class="cat-pill active px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-bold whitespace-nowrap shadow-sm shadow-purple-900">Todos</button>
+          <button data-cat="Pecho" class="cat-pill px-3.5 py-1.5 rounded-full glass-pill text-purple-300 whitespace-nowrap hover:text-white font-semibold">Pecho</button>
+          <button data-cat="Espalda" class="cat-pill px-3.5 py-1.5 rounded-full glass-pill text-purple-300 whitespace-nowrap hover:text-white font-semibold">Espalda</button>
+          <button data-cat="Piernas" class="cat-pill px-3.5 py-1.5 rounded-full glass-pill text-purple-300 whitespace-nowrap hover:text-white font-semibold">Piernas</button>
+          <button data-cat="Hombros" class="cat-pill px-3.5 py-1.5 rounded-full glass-pill text-purple-300 whitespace-nowrap hover:text-white font-semibold">Hombros</button>
+          <button data-cat="Brazos" class="cat-pill px-3.5 py-1.5 rounded-full glass-pill text-purple-300 whitespace-nowrap hover:text-white font-semibold">Brazos</button>
+          <button data-cat="Core" class="cat-pill px-3.5 py-1.5 rounded-full glass-pill text-purple-300 whitespace-nowrap hover:text-white font-semibold">Core</button>
+          <button data-cat="custom" class="cat-pill px-3.5 py-1.5 rounded-full glass-pill text-purple-300 whitespace-nowrap hover:text-white font-semibold">Mis Ejercicios</button>
         </div>
       </div>
 
@@ -362,50 +385,53 @@
     <section id="tab-profile" class="tab-content hidden space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-bold text-white">Perfil de Usuario</h2>
-          <p class="text-xs text-purple-300/70">Datos personales y registro de peso corporal</p>
+          <h2 class="text-lg font-black text-white tracking-tight flex items-center space-x-2">
+            <span>Perfil de Usuario</span>
+            <span class="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_#a855f7]"></span>
+          </h2>
+          <p class="text-xs text-purple-300/70 font-medium">Datos personales y registro de peso corporal</p>
         </div>
-        <button id="btn-reopen-onboarding" class="text-[11px] text-fuchsia-400 hover:text-fuchsia-300 font-semibold px-2 py-1 rounded-lg border border-purple-500/30">
-          Repetir Encuesta Inicial
+        <button id="btn-reopen-onboarding" class="text-[11px] text-fuchsia-400 hover:text-fuchsia-300 font-bold px-2.5 py-1 rounded-xl glass-pill transition">
+          Repetir Encuesta
         </button>
       </div>
 
-      <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-4">
-        <div class="flex items-center justify-between border-b border-[#23123b] pb-2">
-          <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider">Datos Personales</h3>
+      <div class="glass-card rounded-3xl p-4.5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-purple-500/15 pb-2">
+          <h3 class="text-xs font-black text-fuchsia-300 uppercase tracking-wider">Datos Personales</h3>
         </div>
 
         <form id="form-profile-calculator" class="space-y-3">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-[11px] text-purple-300/80 block mb-1">Nombre / Apodo</label>
-              <input type="text" id="profile-name" placeholder="Tu nombre" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+              <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Nombre / Apodo</label>
+              <input type="text" id="profile-name" placeholder="Tu nombre" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 font-medium">
             </div>
             <div>
-              <label class="text-[11px] text-purple-300/80 block mb-1">Género biológico</label>
-              <select id="profile-gender" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+              <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Género biológico</label>
+              <select id="profile-gender" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
                 <option value="male">Hombre</option>
                 <option value="female">Mujer</option>
               </select>
             </div>
             <div>
-              <label class="text-[11px] text-purple-300/80 block mb-1">Edad</label>
-              <input type="number" id="profile-age" placeholder="26" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+              <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Edad</label>
+              <input type="number" id="profile-age" placeholder="26" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 mono">
             </div>
             <div>
-              <label class="text-[11px] text-purple-300/80 block mb-1">Altura (cm)</label>
-              <input type="number" id="profile-height" placeholder="178" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+              <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Altura (cm)</label>
+              <input type="number" id="profile-height" placeholder="178" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 mono">
             </div>
           </div>
 
           <div>
-            <label class="text-[11px] text-purple-300/80 block mb-1">Peso Actual (kg)</label>
-            <input type="number" step="0.1" id="profile-current-weight" placeholder="77.3" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+            <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Peso Actual (kg)</label>
+            <input type="number" step="0.1" id="profile-current-weight" placeholder="77.3" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 mono">
           </div>
 
           <div>
-            <label class="text-[11px] text-purple-300/80 block mb-1">Nivel de Actividad Física Habitual</label>
-            <select id="profile-activity" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+            <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Nivel de Actividad Física Habitual</label>
+            <select id="profile-activity" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
               <option value="1.2">Sedentario (Poco o nada de ejercicio)</option>
               <option value="1.375">Ligero (Entreno 1-3 días/semana)</option>
               <option value="1.55" selected>Moderado (Gym 3-5 días/semana)</option>
@@ -414,29 +440,37 @@
             </select>
           </div>
 
-          <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-purple-700 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-purple-950 transition">
+          <button type="submit" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black text-xs shadow-lg shadow-purple-950 transition active:scale-[0.98]">
             Guardar Datos del Perfil
           </button>
         </form>
       </div>
 
       <!-- Body Weight Log Section -->
-      <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl p-4 shadow-xl space-y-3">
+      <div class="glass-card rounded-3xl p-4.5 shadow-xl space-y-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2">
-            <span class="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
-              <i data-lucide="scale" class="w-4 h-4"></i>
+            <span class="w-7 h-7 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300">
+              <i data-lucide="scale" class="w-3.5 h-3.5"></i>
             </span>
-            <h3 class="text-sm font-bold text-white">Historial de Peso Corporal</h3>
+            <h3 class="text-xs font-black uppercase tracking-wider text-white">Historial de Peso Corporal</h3>
           </div>
-          <span id="current-weight-badge" class="text-xs font-bold text-fuchsia-400">-- kg</span>
+          <span id="current-weight-badge" class="text-xs font-black text-fuchsia-400 mono">-- kg</span>
         </div>
 
         <form id="form-log-weight" class="flex items-center space-x-2">
-          <input type="date" id="weight-entry-date" class="flex-1 bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
-          <input type="number" step="0.1" id="weight-entry-val" placeholder="Kg (ej: 78.5)" class="w-28 bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500" required>
-          <button type="submit" class="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-md shadow-purple-900/30">
+          <input type="date" id="weight-entry-date" class="flex-1 bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 mono">
+          <input type="number" step="0.1" id="weight-entry-val" placeholder="Kg (78.5)" class="w-28 bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 mono" required>
+          <button type="submit" class="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white text-xs font-black shadow-md shadow-purple-900/30 hover:opacity-95 active:scale-95 transition">
             Añadir
+          </button>
+        </form>
+
+        <div id="weight-history-list" class="max-h-48 overflow-y-auto space-y-1.5 text-xs no-scrollbar">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </section>
           </button>
         </form>
 
@@ -449,21 +483,21 @@
   </main>
 
   <!-- BOTTOM NAVIGATION BAR (Mobile First) -->
-  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0d071a]/95 backdrop-blur-md border-t border-[#24133b] max-w-lg mx-auto shadow-2xl">
+  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0515]/95 backdrop-blur-2xl border-t border-purple-500/20 max-w-lg mx-auto shadow-2xl">
     <div class="grid grid-cols-4 py-2">
-      <button data-target="tab-calendar" class="nav-item active flex flex-col items-center justify-center text-purple-400 transition">
+      <button data-target="tab-calendar" class="nav-item active flex flex-col items-center justify-center text-purple-400 py-1 transition">
         <i data-lucide="calendar" class="w-5 h-5"></i>
-        <span class="text-[10px] font-semibold mt-1">Calendario</span>
+        <span class="text-[10px] font-bold mt-1">Calendario</span>
       </button>
-      <button data-target="tab-workout" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
+      <button data-target="tab-workout" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 py-1 transition">
         <i data-lucide="dumbbell" class="w-5 h-5"></i>
         <span class="text-[10px] font-semibold mt-1">Entrenar</span>
       </button>
-      <button data-target="tab-charts" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
+      <button data-target="tab-charts" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 py-1 transition">
         <i data-lucide="line-chart" class="w-5 h-5"></i>
         <span class="text-[10px] font-semibold mt-1">Gráficos</span>
       </button>
-      <button data-target="tab-exercises" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 transition">
+      <button data-target="tab-exercises" class="nav-item flex flex-col items-center justify-center text-purple-300/50 hover:text-purple-200 py-1 transition">
         <i data-lucide="book-open" class="w-5 h-5"></i>
         <span class="text-[10px] font-semibold mt-1">Rutinas</span>
       </button>
@@ -473,44 +507,44 @@
   <!-- ========================================== -->
   <!-- MODAL: ASISTENTE ONBOARDING INICIAL (PASO A PASO) -->
   <!-- ========================================== -->
-  <div id="modal-onboarding" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-[#110a1f] border border-[#3b1b66] rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl animate-fade-in relative max-h-[92vh] overflow-y-auto">
+  <div id="modal-onboarding" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl animate-fade-in relative max-h-[92vh] overflow-y-auto">
 
       <!-- Header -->
-      <div class="flex items-center space-x-2 pb-3 border-b border-[#24133b]">
-        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center text-xs font-black text-white">IT</div>
-        <span class="text-xs font-bold text-white tracking-wide">Bienvenido a IronTrack</span>
+      <div class="flex items-center space-x-2 pb-3 border-b border-purple-500/15">
+        <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center text-xs font-black text-white">IT</div>
+        <span class="text-xs font-black text-white tracking-wide uppercase">Bienvenido a IronTrack</span>
       </div>
 
       <!-- Datos básicos -->
       <div class="space-y-4">
         <div>
-          <h3 class="text-base font-bold text-white">Tus Datos Personales</h3>
+          <h3 class="text-base font-black text-white tracking-tight">Tus Datos Personales</h3>
           <p class="text-xs text-purple-300/70 mt-0.5">Solo necesitamos lo básico para empezar.</p>
         </div>
 
         <div class="space-y-3">
           <div>
-            <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Tu Nombre o Apodo *</label>
-            <input type="text" id="ob-name" required placeholder="Ej: Alex" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Tu Nombre o Apodo *</label>
+            <input type="text" id="ob-name" required placeholder="Ej: Alex" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-400">
           </div>
 
           <div class="grid grid-cols-2 gap-2.5">
             <div>
-              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Edad (años) *</label>
-              <input type="number" id="ob-age" placeholder="25" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+              <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Edad (años) *</label>
+              <input type="number" id="ob-age" placeholder="25" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-400 mono">
             </div>
             <div>
-              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Estatura (cm) *</label>
-              <input type="number" id="ob-height" placeholder="178" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+              <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Estatura (cm) *</label>
+              <input type="number" id="ob-height" placeholder="178" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-400 mono">
             </div>
             <div>
-              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Peso Actual (kg) *</label>
-              <input type="number" step="0.1" id="ob-current-weight" placeholder="75.0" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+              <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Peso Actual (kg) *</label>
+              <input type="number" step="0.1" id="ob-current-weight" placeholder="75.0" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-400 mono">
             </div>
             <div>
-              <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Género biológico</label>
-              <select id="ob-gender" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+              <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Género biológico</label>
+              <select id="ob-gender" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-400">
                 <option value="male">Hombre</option>
                 <option value="female">Mujer</option>
               </select>
@@ -518,7 +552,7 @@
           </div>
         </div>
 
-        <button id="btn-ob-finish-simple" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-purple-950 transition">
+        <button id="btn-ob-finish-simple" class="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black text-sm shadow-xl shadow-purple-950 transition active:scale-[0.98]">
           Empezar 🚀
         </button>
       </div>
@@ -530,16 +564,16 @@
   <!-- MODAL: ASISTENTE DE RUTINAS POR DÍAS (NUEVO) -->
   <!-- ========================================== -->
   <div id="modal-wizard-routine" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-[#110a1f] border border-[#3b1b66] rounded-3xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-in relative max-h-[92vh] overflow-y-auto flex flex-col">
-      <div class="flex items-center justify-between pb-2.5 border-b border-[#24133b]">
+    <div class="glass-card rounded-3xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-in relative max-h-[92vh] overflow-y-auto flex flex-col">
+      <div class="flex items-center justify-between pb-2.5 border-b border-purple-500/15">
         <div class="flex items-center space-x-2">
-          <span class="p-1 rounded-lg bg-fuchsia-500/20 text-fuchsia-400">
-            <i data-lucide="calendar-range" class="w-4 h-4"></i>
+          <span class="w-7 h-7 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/30 flex items-center justify-center text-fuchsia-300">
+            <i data-lucide="calendar-range" class="w-3.5 h-3.5"></i>
           </span>
-          <h3 class="text-sm font-bold text-white">Configurar Plan de Entrenamiento</h3>
+          <h3 class="text-sm font-black text-white">Configurar Plan de Entrenamiento</h3>
         </div>
-        <button id="btn-close-wizard-routine" class="p-1 text-purple-400 hover:text-white">
-          <i data-lucide="x" class="w-5 h-5"></i>
+        <button id="btn-close-wizard-routine" class="p-1 rounded-xl text-purple-300 hover:text-white glass-pill">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
@@ -551,30 +585,30 @@
         </div>
 
         <div class="grid grid-cols-4 gap-2">
-          <button type="button" class="btn-select-days py-3 rounded-2xl bg-[#170e28] hover:bg-[#24133e] border border-[#2f184e] text-center transition" data-days="2">
-            <span class="text-lg font-black text-white block">2</span>
-            <span class="text-[10px] text-purple-400">Días</span>
+          <button type="button" class="btn-select-days py-3 rounded-2xl glass-pill hover:border-purple-400 text-center transition" data-days="2">
+            <span class="text-lg font-black text-white block mono">2</span>
+            <span class="text-[10px] text-purple-300 font-bold uppercase">Días</span>
           </button>
-          <button type="button" class="btn-select-days py-3 rounded-2xl bg-[#170e28] hover:bg-[#24133e] border border-[#2f184e] text-center transition" data-days="3">
-            <span class="text-lg font-black text-white block">3</span>
-            <span class="text-[10px] text-purple-400">Días</span>
+          <button type="button" class="btn-select-days py-3 rounded-2xl glass-pill hover:border-purple-400 text-center transition" data-days="3">
+            <span class="text-lg font-black text-white block mono">3</span>
+            <span class="text-[10px] text-purple-300 font-bold uppercase">Días</span>
           </button>
-          <button type="button" class="btn-select-days py-3 rounded-2xl bg-[#170e28] hover:bg-[#24133e] border border-purple-500 bg-purple-950/40 text-center transition active" data-days="4">
-            <span class="text-lg font-black text-white block">4</span>
-            <span class="text-[10px] text-purple-400">Días</span>
+          <button type="button" class="btn-select-days py-3 rounded-2xl glass-pill border-fuchsia-400 bg-fuchsia-500/20 text-center transition active" data-days="4">
+            <span class="text-lg font-black text-white block mono">4</span>
+            <span class="text-[10px] text-fuchsia-300 font-bold uppercase">Días</span>
           </button>
-          <button type="button" class="btn-select-days py-3 rounded-2xl bg-[#170e28] hover:bg-[#24133e] border border-[#2f184e] text-center transition" data-days="5">
-            <span class="text-lg font-black text-white block">5</span>
-            <span class="text-[10px] text-purple-400">Días</span>
+          <button type="button" class="btn-select-days py-3 rounded-2xl glass-pill hover:border-purple-400 text-center transition" data-days="5">
+            <span class="text-lg font-black text-white block mono">5</span>
+            <span class="text-[10px] text-purple-300 font-bold uppercase">Días</span>
           </button>
         </div>
 
         <div class="pt-1">
-          <label class="text-[11px] text-purple-300/80 block mb-1">Nombre general del Plan / Rutina</label>
-          <input type="text" id="wizard-plan-name" value="Mi Plan de Gimnasio" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Nombre general del Plan / Rutina</label>
+          <input type="text" id="wizard-plan-name" value="Mi Plan de Gimnasio" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-400 font-medium">
         </div>
 
-        <button id="btn-routine-wizard-to-step2" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-md transition">
+        <button id="btn-routine-wizard-to-step2" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black text-xs shadow-md transition active:scale-[0.98]">
           Definir Ejercicios por Día →
         </button>
       </div>
@@ -583,10 +617,39 @@
       <div id="routine-wizard-step-2" class="space-y-4 hidden flex-1 flex flex-col">
         <!-- Navegación entre pestañas de días -->
         <div class="flex items-center justify-between">
-          <div id="wizard-days-nav" class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
+          <div id="wizard-days-nav" class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
             <!-- Filled dynamically (Día 1, Día 2, etc.) -->
           </div>
         </div>
+
+        <div class="glass-pill rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <input type="text" id="wizard-day-title" placeholder="Ej: Día 1 - Empuje / Pecho" class="w-full bg-[#120a22]/90 border border-purple-500/30 rounded-xl px-3 py-1.5 text-xs text-white font-bold focus:outline-none focus:border-fuchsia-400">
+          </div>
+          <p class="text-[10px] text-purple-300/70">Añade los ejercicios que harás en este día. Se inicializan con 1 repetición para que pongas las tuyas al entrenar.</p>
+        </div>
+
+        <div class="flex-1 space-y-2 max-h-56 overflow-y-auto p-1 no-scrollbar" id="wizard-day-exercises-container">
+          <!-- Filled with exercises for the selected day -->
+        </div>
+
+        <button id="btn-wizard-add-exercise-to-day" class="w-full py-2.5 rounded-2xl border border-dashed border-purple-500/40 bg-purple-950/20 hover:bg-purple-900/30 text-purple-200 font-bold text-xs flex items-center justify-center space-x-1.5 transition">
+          <i data-lucide="plus" class="w-3.5 h-3.5 text-fuchsia-400"></i>
+          <span>Añadir Ejercicio a este Día</span>
+        </button>
+
+        <div class="flex items-center space-x-2 pt-2 border-t border-purple-500/15">
+          <button id="btn-routine-wizard-back-1" class="w-1/3 py-2.5 rounded-2xl glass-pill hover:bg-purple-900/30 text-purple-300 font-bold text-xs">
+            ← Días
+          </button>
+          <button id="btn-save-all-wizard-routines" class="w-2/3 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black text-xs shadow-lg shadow-purple-950 transition active:scale-[0.98]">
+            Guardar Rutina Completa ✅
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
         <div class="bg-[#170e28] border border-[#2e184c] rounded-2xl p-3 space-y-2">
           <div class="flex items-center justify-between">
@@ -618,40 +681,40 @@
   </div>
 
   <!-- MODAL: SELECCIONAR EJERCICIO PARA EL ENTRENAMIENTO -->
-  <div id="modal-exercise-picker" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-[#110a1f] border border-[#2a1645] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-slide-up">
-      <div class="p-4 border-b border-[#24133b] flex items-center justify-between">
-        <h3 class="text-sm font-bold text-white">Elegir Ejercicio</h3>
-        <button id="btn-close-exercise-picker" class="p-1 rounded-lg hover:bg-[#1f1138] text-purple-300">
-          <i data-lucide="x" class="w-5 h-5"></i>
+  <div id="modal-exercise-picker" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="glass-card rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-slide-up">
+      <div class="p-4 border-b border-purple-500/15 flex items-center justify-between">
+        <h3 class="text-sm font-black text-white">Elegir Ejercicio</h3>
+        <button id="btn-close-exercise-picker" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
-      <div class="p-3 border-b border-[#24133b]">
-        <input type="text" id="picker-search-input" placeholder="Buscar ejercicio..." class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-500">
+      <div class="p-3 border-b border-purple-500/15">
+        <input type="text" id="picker-search-input" placeholder="Buscar ejercicio..." class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 placeholder-purple-300/40 focus:outline-none focus:border-fuchsia-400">
       </div>
-      <div id="picker-exercise-list" class="flex-1 overflow-y-auto p-3 space-y-2">
+      <div id="picker-exercise-list" class="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar">
         <!-- Filled with clickable exercise cards -->
       </div>
     </div>
   </div>
 
   <!-- MODAL: CREAR EJERCICIO PROPIO -->
-  <div id="modal-custom-exercise" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl animate-fade-in">
+  <div id="modal-custom-exercise" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl animate-fade-in">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-white">Nuevo Ejercicio Propio</h3>
-        <button id="btn-close-custom-modal" class="p-1 text-purple-400 hover:text-white">
-          <i data-lucide="x" class="w-5 h-5"></i>
+        <h3 class="text-sm font-black text-white">Nuevo Ejercicio Propio</h3>
+        <button id="btn-close-custom-modal" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
       <form id="form-custom-exercise" class="space-y-3">
         <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nombre del Ejercicio *</label>
-          <input type="text" id="new-ex-name" required placeholder="Ej: Press Francés en Banco Inclinado" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Nombre del Ejercicio *</label>
+          <input type="text" id="new-ex-name" required placeholder="Ej: Press Francés en Banco Inclinado" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
         </div>
         <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Grupo Muscular Principal *</label>
-          <select id="new-ex-category" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Grupo Muscular Principal *</label>
+          <select id="new-ex-category" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
             <option value="Pecho">Pecho</option>
             <option value="Espalda">Espalda</option>
             <option value="Piernas">Piernas</option>
@@ -661,8 +724,8 @@
           </select>
         </div>
         <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Equipamiento</label>
-          <select id="new-ex-equipment" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Equipamiento</label>
+          <select id="new-ex-equipment" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
             <option value="Barra">Barra</option>
             <option value="Mancuernas">Mancuernas</option>
             <option value="Polea / Cable">Polea / Cable</option>
@@ -671,7 +734,7 @@
             <option value="Otro">Otro</option>
           </select>
         </div>
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-md transition">
+        <button type="submit" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black text-xs shadow-md transition active:scale-[0.98]">
           Crear y Guardar
         </button>
       </form>
@@ -679,35 +742,35 @@
   </div>
 
   <!-- MODAL: EDITAR RUTINA -->
-  <div id="modal-edit-routine" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-[#110a1f] border border-[#2a1645] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+  <div id="modal-edit-routine" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="glass-card rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <!-- Header -->
-      <div class="p-4 border-b border-[#24133b] flex items-center justify-between flex-shrink-0">
-        <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+      <div class="p-4 border-b border-purple-500/15 flex items-center justify-between flex-shrink-0">
+        <h3 class="text-sm font-black text-white flex items-center space-x-2">
           <i data-lucide="pencil" class="w-4 h-4 text-fuchsia-400"></i>
           <span>Editar Rutina</span>
         </h3>
-        <button id="btn-close-edit-routine" class="p-1 rounded-lg hover:bg-[#1f1138] text-purple-300">
-          <i data-lucide="x" class="w-5 h-5"></i>
+        <button id="btn-close-edit-routine" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
       <!-- Nombre de la rutina -->
-      <div class="p-4 border-b border-[#24133b] flex-shrink-0">
-        <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nombre de la Rutina</label>
-        <input type="text" id="edit-routine-name" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500" placeholder="Nombre de la rutina">
+      <div class="p-4 border-b border-purple-500/15 flex-shrink-0">
+        <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Nombre de la Rutina</label>
+        <input type="text" id="edit-routine-name" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400 font-medium" placeholder="Nombre de la rutina">
       </div>
 
       <!-- Lista de ejercicios editables -->
-      <div id="edit-routine-exercises-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+      <div id="edit-routine-exercises-list" class="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar"></div>
 
       <!-- Botón añadir ejercicio -->
-      <div class="p-3 border-t border-[#24133b] flex-shrink-0 space-y-2">
-        <button id="btn-edit-routine-add-exercise" class="w-full py-2 rounded-xl bg-[#180e2a] hover:bg-[#23133d] text-purple-300 text-xs font-semibold flex items-center justify-center space-x-1 border border-[#37195c]">
+      <div class="p-3 border-t border-purple-500/15 flex-shrink-0 space-y-2">
+        <button id="btn-edit-routine-add-exercise" class="w-full py-2.5 rounded-2xl glass-pill hover:bg-purple-900/30 text-purple-300 hover:text-white text-xs font-bold flex items-center justify-center space-x-1.5 transition">
           <i data-lucide="plus" class="w-3.5 h-3.5 text-fuchsia-400"></i>
           <span>Añadir Ejercicio</span>
         </button>
-        <button id="btn-save-edit-routine" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-md">
+        <button id="btn-save-edit-routine" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black text-xs shadow-md active:scale-[0.98] transition">
           Guardar Cambios
         </button>
       </div>
@@ -715,23 +778,23 @@
   </div>
 
   <!-- MODAL: EDITAR EJERCICIO PROPIO -->
-  <div id="modal-edit-exercise" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-[#110a1f] border border-[#2a1645] rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
+  <div id="modal-edit-exercise" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-white">Editar Ejercicio</h3>
-        <button id="btn-close-edit-exercise" class="p-1 text-purple-400 hover:text-white">
-          <i data-lucide="x" class="w-5 h-5"></i>
+        <h3 class="text-sm font-black text-white">Editar Ejercicio</h3>
+        <button id="btn-close-edit-exercise" class="w-8 h-8 rounded-xl glass-pill flex items-center justify-center text-purple-300 hover:text-white transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
       <form id="form-edit-exercise" class="space-y-3">
         <input type="hidden" id="edit-ex-id">
         <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Nombre del Ejercicio *</label>
-          <input type="text" id="edit-ex-name" required class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Nombre del Ejercicio *</label>
+          <input type="text" id="edit-ex-name" required class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
         </div>
         <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Grupo Muscular Principal *</label>
-          <select id="edit-ex-category" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Grupo Muscular Principal *</label>
+          <select id="edit-ex-category" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
             <option value="Pecho">Pecho</option>
             <option value="Espalda">Espalda</option>
             <option value="Piernas">Piernas</option>
@@ -741,8 +804,8 @@
           </select>
         </div>
         <div>
-          <label class="text-[11px] font-semibold text-purple-300/80 block mb-1">Equipamiento</label>
-          <select id="edit-ex-equipment" class="w-full bg-[#170e28] border border-[#321a52] rounded-xl px-3 py-2 text-sm text-purple-100 focus:outline-none focus:border-purple-500">
+          <label class="text-[10px] font-extrabold text-purple-300/80 uppercase tracking-wider block mb-1">Equipamiento</label>
+          <select id="edit-ex-equipment" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400">
             <option value="Barra">Barra</option>
             <option value="Mancuernas">Mancuernas</option>
             <option value="Polea / Cable">Polea / Cable</option>
@@ -751,7 +814,7 @@
             <option value="Otro">Otro</option>
           </select>
         </div>
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-md transition">
+        <button type="submit" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black text-xs shadow-md transition active:scale-[0.98]">
           Guardar Cambios
         </button>
       </form>

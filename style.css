@@ -1,4 +1,7 @@
-/* Estilos personalizados oscuros con acentos morados/violetas neón y textura de fondo */
+/* ==========================================================================
+   IronTrack - Theme & Cyberpunk/Glassmorphic Style System
+   ========================================================================== */
+
 @keyframes slideUp {
   from {
     transform: translateY(100%);
@@ -27,19 +30,49 @@
   animation: fadeIn 0.2s ease-out forwards;
 }
 
-/* Fondo con relieve sutil: malla sutil con brillo radial */
+/* Tipografía y fondo principal con gradientes radiales y grilla sutil */
 body {
-  background-color: #07040d;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #080511;
   background-image: 
-    radial-gradient(at 15% 15%, rgba(147, 51, 234, 0.12) 0px, transparent 50%),
-    radial-gradient(at 85% 85%, rgba(236, 72, 153, 0.08) 0px, transparent 50%),
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px;
+    radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.18) 0px, transparent 45%),
+    radial-gradient(at 100% 10%, rgba(236, 72, 153, 0.14) 0px, transparent 40%),
+    radial-gradient(at 50% 100%, rgba(147, 51, 234, 0.12) 0px, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 28px 28px;
   background-attachment: fixed;
 }
 
-/* Scrollbar estilizado en morado oscuro */
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Efectos Glassmorphic */
+.glass-card {
+  background: linear-gradient(145deg, rgba(23, 13, 38, 0.78) 0%, rgba(14, 8, 26, 0.92) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.18);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-pill {
+  background: rgba(26, 16, 44, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(168, 85, 247, 0.22);
+}
+
+.glow-neon {
+  box-shadow: 0 0 20px -3px rgba(217, 70, 239, 0.35);
+}
+
+.glow-purple {
+  box-shadow: 0 0 16px -2px rgba(168, 85, 247, 0.35);
+}
+
+/* Scrollbar estilizado */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -58,7 +91,7 @@ body {
   background: #581c87;
 }
 
-/* Ocultar flechas en inputs de número */
+/* Ocultar flechas en inputs numéricos */
 input[type=number]::-webkit-inner-spin-button, 
 input[type=number]::-webkit-outer-spin-button { 
   -webkit-appearance: none; 
@@ -107,10 +140,19 @@ button:active {
   border-color: #ec4899 !important;
 }
 
-/* Tarjetas con efecto glassmorphism y relieve */
-.glass-panel {
-  background: linear-gradient(135deg, rgba(23, 14, 40, 0.85) 0%, rgba(17, 10, 31, 0.95) 100%);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(168, 85, 247, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+/* Estilos barra de navegación activa */
+.nav-item.active {
+  color: #f472b6 !important;
+  position: relative;
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  width: 14px;
+  height: 3px;
+  border-radius: 9999px;
+  background: #f472b6;
+  box-shadow: 0 0 8px #f472b6;
 }
