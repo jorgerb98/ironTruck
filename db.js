@@ -39,6 +39,7 @@ const DEFAULT_EXERCISES = [
 
   // Brazos
   { id: 'barbell-curl', name: 'Curl de Bíceps con Barra Z', category: 'Brazos', equipment: 'Barra', isCustom: false },
+  { id: 'bicep-curl-unilateral', name: 'Curl de Bíceps Unilateral', category: 'Brazos', equipment: 'Mancuernas', isCustom: false },
   { id: 'db-hammer-curl', name: 'Curl Martillo con Mancuernas', category: 'Brazos', equipment: 'Mancuernas', isCustom: false },
   { id: 'tricep-pushdown', name: 'Extensiones de Tríceps en Polea', category: 'Brazos', equipment: 'Polea / Cable', isCustom: false },
   { id: 'tricep-aboveHead', name: 'Extensiones de Tríceps encima cabeza', category: 'Brazos', equipment: 'Polea / Cable', isCustom: false },
@@ -86,46 +87,133 @@ const DB = {
       localStorage.setItem('it_foods', JSON.stringify(DEFAULT_FOODS));
     }
     if (!localStorage.getItem('it_routines')) {
-      // Rutinas plantilla de ejemplo sin pesos prefijados (esqueletos)
+      // Rutinas plantilla de ejemplo de 4 días (Hipertrofia - 2 estímulos por semana)
       const sampleRoutines = [
         {
-          id: 'rot-push',
-          name: 'Empuje (Pecho, Hombro, Tríceps)',
-          description: 'Enfocada en press y tríceps',
+          id: 'rot-dia-1',
+          name: 'Día 1 - Upper A',
+          description: 'Torso: Pecho, Espalda, Hombro, Brazos',
           exercises: [
-            { exerciseId: 'bench-press', exerciseName: 'Press de Banca Plano con Barra', targetSets: 4 },
-            { exerciseId: 'incline-db-press', exerciseName: 'Press Inclinado con Mancuernas', targetSets: 3 },
-            { exerciseId: 'db-shoulder-press', exerciseName: 'Press de Hombro con Mancuernas', targetSets: 3 },
-            { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales con Mancuerna', targetSets: 4 },
-            { exerciseId: 'tricep-pushdown', exerciseName: 'Extensiones de Tríceps en Polea', targetSets: 3 }
+            { exerciseId: 'machine-chest-press', exerciseName: 'Press en Máquina Sentado', targetSets: 3 },
+            { exerciseId: 'lat-pulldown', exerciseName: 'Jalón al Pecho en Polea', targetSets: 3 },
+            { exerciseId: 'overhead-press', exerciseName: 'Press Militar de Pie con Barra', targetSets: 3 },
+            { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
+            { exerciseId: 'chest-fly-cable-machine', exerciseName: 'Mariposa maquina', targetSets: 2 },
+            { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
+            { exerciseId: 'barbell-curl', exerciseName: 'Curl de Bíceps con Barra Z', targetSets: 2 },
+            { exerciseId: 'tricep-pushdown', exerciseName: 'Extensiones de Tríceps en Polea', targetSets: 2 }
           ]
         },
         {
-          id: 'rot-pull',
-          name: 'Tirón (Espalda y Bíceps)',
-          description: 'Remos, dominadas y flexión de codo',
+          id: 'rot-dia-2',
+          name: 'Día 2 - Lower A',
+          description: 'Pierna: Sentadilla, Cuádriceps, Femoral, Gemelo, Aductores',
           exercises: [
-            { exerciseId: 'deadlift', exerciseName: 'Peso Muerto Convencional', targetSets: 3 },
-            { exerciseId: 'lat-pulldown', exerciseName: 'Jalón al Pecho en Polea', targetSets: 4 },
-            { exerciseId: 'barbell-row', exerciseName: 'Remo con Barra Pendlay / 90°', targetSets: 3 },
-            { exerciseId: 'face-pull', exerciseName: 'Face Pull en Polea con Cuerda', targetSets: 3 },
-            { exerciseId: 'barbell-curl', exerciseName: 'Curl de Bíceps con Barra Z', targetSets: 4 }
-          ]
-        },
-        {
-          id: 'rot-leg',
-          name: 'Pierna Completa',
-          description: 'Cuádriceps, femoral y gemelo',
-          exercises: [
-            { exerciseId: 'barbell-squat', exerciseName: 'Sentadilla Trasera con Barra', targetSets: 4 },
+            { exerciseId: 'barbell-squat', exerciseName: 'Sentadilla Trasera con Barra', targetSets: 3 },
             { exerciseId: 'romanian-deadlift', exerciseName: 'Peso Muerto Rumano', targetSets: 3 },
             { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3 },
-            { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 3 },
-            { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 4 }
+            { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2 },
+            { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2 },
+            { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3 },
+            { exerciseId: 'aductors', exerciseName: 'Aductores', targetSets: 2 }
+          ]
+        },
+        {
+          id: 'rot-dia-3',
+          name: 'Día 3 - Upper B',
+          description: 'Torso: Pecho Inclinado, Remo, Hombro, Face Pull, Brazos',
+          exercises: [
+            { exerciseId: 'incline-db-press', exerciseName: 'Press Inclinado con Mancuernas', targetSets: 3 },
+            { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
+            { exerciseId: 'lat-pulldown-neutr', exerciseName: 'Jalón al Pecho agarre Neutro', targetSets: 3 },
+            { exerciseId: 'db-shoulder-press-machine', exerciseName: 'Press de Hombro', targetSets: 3 },
+            { exerciseId: 'face-pull', exerciseName: 'Face Pull en Polea con Cuerda', targetSets: 3 },
+            { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
+            { exerciseId: 'bicep-curl-unilateral', exerciseName: 'Curl de Bíceps Unilateral', targetSets: 3 },
+            { exerciseId: 'tricep-aboveHead', exerciseName: 'Extensiones de Tríceps encima cabeza', targetSets: 3 }
+          ]
+        },
+        {
+          id: 'rot-dia-4',
+          name: 'Día 4 - Lower B',
+          description: 'Pierna: Prensa, Hip Thrust, Búlgara, Femoral, Cuádriceps, Gemelo, Abductores',
+          exercises: [
+            { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3 },
+            { exerciseId: 'hipThrust', exerciseName: 'Hip Thrust', targetSets: 3 },
+            { exerciseId: 'bulgarian', exerciseName: 'Sentadillas bulgaras', targetSets: 3 },
+            { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2 },
+            { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2 },
+            { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3 },
+            { exerciseId: 'abductors', exerciseName: 'Abductores', targetSets: 2 }
           ]
         }
       ];
       localStorage.setItem('it_routines', JSON.stringify(sampleRoutines));
+    }
+    // Actualización de versión de rutinas de ejemplo predeterminadas (versión 4 días hipertrofia)
+    if (localStorage.getItem('it_routines_version') !== 'v4_hypertrophy') {
+      const sampleRoutines = [
+        {
+          id: 'rot-dia-1',
+          name: 'Día 1 - Upper A',
+          description: 'Torso: Pecho, Espalda, Hombro, Brazos',
+          exercises: [
+            { exerciseId: 'machine-chest-press', exerciseName: 'Press en Máquina Sentado', targetSets: 3 },
+            { exerciseId: 'lat-pulldown', exerciseName: 'Jalón al Pecho en Polea', targetSets: 3 },
+            { exerciseId: 'overhead-press', exerciseName: 'Press Militar de Pie con Barra', targetSets: 3 },
+            { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
+            { exerciseId: 'chest-fly-cable-machine', exerciseName: 'Mariposa maquina', targetSets: 2 },
+            { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
+            { exerciseId: 'barbell-curl', exerciseName: 'Curl de Bíceps con Barra Z', targetSets: 2 },
+            { exerciseId: 'tricep-pushdown', exerciseName: 'Extensiones de Tríceps en Polea', targetSets: 2 }
+          ]
+        },
+        {
+          id: 'rot-dia-2',
+          name: 'Día 2 - Lower A',
+          description: 'Pierna: Sentadilla, Cuádriceps, Femoral, Gemelo, Aductores',
+          exercises: [
+            { exerciseId: 'barbell-squat', exerciseName: 'Sentadilla Trasera con Barra', targetSets: 3 },
+            { exerciseId: 'romanian-deadlift', exerciseName: 'Peso Muerto Rumano', targetSets: 3 },
+            { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3 },
+            { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2 },
+            { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2 },
+            { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3 },
+            { exerciseId: 'aductors', exerciseName: 'Aductores', targetSets: 2 }
+          ]
+        },
+        {
+          id: 'rot-dia-3',
+          name: 'Día 3 - Upper B',
+          description: 'Torso: Pecho Inclinado, Remo, Hombro, Face Pull, Brazos',
+          exercises: [
+            { exerciseId: 'incline-db-press', exerciseName: 'Press Inclinado con Mancuernas', targetSets: 3 },
+            { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
+            { exerciseId: 'lat-pulldown-neutr', exerciseName: 'Jalón al Pecho agarre Neutro', targetSets: 3 },
+            { exerciseId: 'db-shoulder-press-machine', exerciseName: 'Press de Hombro', targetSets: 3 },
+            { exerciseId: 'face-pull', exerciseName: 'Face Pull en Polea con Cuerda', targetSets: 3 },
+            { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
+            { exerciseId: 'bicep-curl-unilateral', exerciseName: 'Curl de Bíceps Unilateral', targetSets: 3 },
+            { exerciseId: 'tricep-aboveHead', exerciseName: 'Extensiones de Tríceps encima cabeza', targetSets: 3 }
+          ]
+        },
+        {
+          id: 'rot-dia-4',
+          name: 'Día 4 - Lower B',
+          description: 'Pierna: Prensa, Hip Thrust, Búlgara, Femoral, Cuádriceps, Gemelo, Abductores',
+          exercises: [
+            { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3 },
+            { exerciseId: 'hipThrust', exerciseName: 'Hip Thrust', targetSets: 3 },
+            { exerciseId: 'bulgarian', exerciseName: 'Sentadillas bulgaras', targetSets: 3 },
+            { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2 },
+            { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2 },
+            { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3 },
+            { exerciseId: 'abductors', exerciseName: 'Abductores', targetSets: 2 }
+          ]
+        }
+      ];
+      localStorage.setItem('it_routines', JSON.stringify(sampleRoutines));
+      localStorage.setItem('it_routines_version', 'v4_hypertrophy');
     }
     if (!localStorage.getItem('it_meals')) {
       localStorage.setItem('it_meals', JSON.stringify([]));

@@ -50,13 +50,59 @@ let restTimerInterval = null;
 // Estado del Asistente de Rutinas por Días
 let wizardRoutineState = {
   totalDays: 4,
-  planName: 'Mi Plan de Gimnasio',
+  planName: 'Rutina Hipertrofia 4 Días',
   currentDayIndex: 0,
   days: [
-    { title: 'Día 1 - Empuje (Pecho/Hombro)', exercises: [{ exerciseId: 'bench-press', exerciseName: 'Press de Banca Plano con Barra', targetSets: 4 }] },
-    { title: 'Día 2 - Tirón (Espalda/Bíceps)', exercises: [{ exerciseId: 'lat-pulldown', exerciseName: 'Jalón al Pecho en Polea', targetSets: 4 }] },
-    { title: 'Día 3 - Pierna Completa', exercises: [{ exerciseId: 'barbell-squat', exerciseName: 'Sentadilla Trasera con Barra', targetSets: 4 }] },
-    { title: 'Día 4 - Torso / Brazos', exercises: [{ exerciseId: 'incline-db-press', exerciseName: 'Press Inclinado con Mancuernas', targetSets: 3 }] }
+    {
+      title: 'Día 1 - Upper A',
+      exercises: [
+        { exerciseId: 'machine-chest-press', exerciseName: 'Press en Máquina Sentado', targetSets: 3 },
+        { exerciseId: 'lat-pulldown', exerciseName: 'Jalón al Pecho en Polea', targetSets: 3 },
+        { exerciseId: 'overhead-press', exerciseName: 'Press Militar de Pie con Barra', targetSets: 3 },
+        { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
+        { exerciseId: 'chest-fly-cable-machine', exerciseName: 'Mariposa maquina', targetSets: 2 },
+        { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
+        { exerciseId: 'barbell-curl', exerciseName: 'Curl de Bíceps con Barra Z', targetSets: 2 },
+        { exerciseId: 'tricep-pushdown', exerciseName: 'Extensiones de Tríceps en Polea', targetSets: 2 }
+      ]
+    },
+    {
+      title: 'Día 2 - Lower A',
+      exercises: [
+        { exerciseId: 'barbell-squat', exerciseName: 'Sentadilla Trasera con Barra', targetSets: 3 },
+        { exerciseId: 'romanian-deadlift', exerciseName: 'Peso Muerto Rumano', targetSets: 3 },
+        { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3 },
+        { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2 },
+        { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2 },
+        { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3 },
+        { exerciseId: 'aductors', exerciseName: 'Aductores', targetSets: 2 }
+      ]
+    },
+    {
+      title: 'Día 3 - Upper B',
+      exercises: [
+        { exerciseId: 'incline-db-press', exerciseName: 'Press Inclinado con Mancuernas', targetSets: 3 },
+        { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
+        { exerciseId: 'lat-pulldown-neutr', exerciseName: 'Jalón al Pecho agarre Neutro', targetSets: 3 },
+        { exerciseId: 'db-shoulder-press-machine', exerciseName: 'Press de Hombro', targetSets: 3 },
+        { exerciseId: 'face-pull', exerciseName: 'Face Pull en Polea con Cuerda', targetSets: 3 },
+        { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
+        { exerciseId: 'bicep-curl-unilateral', exerciseName: 'Curl de Bíceps Unilateral', targetSets: 3 },
+        { exerciseId: 'tricep-aboveHead', exerciseName: 'Extensiones de Tríceps encima cabeza', targetSets: 3 }
+      ]
+    },
+    {
+      title: 'Día 4 - Lower B',
+      exercises: [
+        { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3 },
+        { exerciseId: 'hipThrust', exerciseName: 'Hip Thrust', targetSets: 3 },
+        { exerciseId: 'bulgarian', exerciseName: 'Sentadillas bulgaras', targetSets: 3 },
+        { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2 },
+        { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2 },
+        { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3 },
+        { exerciseId: 'abductors', exerciseName: 'Abductores', targetSets: 2 }
+      ]
+    }
   ]
 };
 
