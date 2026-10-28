@@ -1475,20 +1475,26 @@ function updateHomeProgressChart() {
     return;
   }
 
-  // CALCULAR MEJORÍA RELATIVA ENTRE SESIONES CONSECUTIVAS:
-  // Se compara cada sesión contra la anterior calculando la mejoría de fuerza (1RM estimado) 
-  // en los ejercicios coincidentes (para medir progresión real y no variación de volumen por número de ejercicios).
-  // Si no hay ejercicios coincidentes, se utiliza la variación de volumen de la sesión.
+  // CALCULAR MEJORÍA RELATIVA ENTRE SESIONES:
+  // Para evitar comparar entrenos de músculos completamente distintos (ej: pierna con 12000 kg vs hombro con 4000 kg),
+  // se busca la sesión ANTERIOR DE LA MISMA RUTINA (o con los mismos ejercicios).
   const baselineIndex = 100;
   const progressPercentages = [baselineIndex];
   const labels = [filteredWorkouts[0].date.substring(5)];
 
+  // Guardar el historial previo por rutina / tag para poder comparar cada sesión con su homóloga anterior
+  const lastWorkoutByTag = {};
+  lastWorkoutByTag[filteredWorkouts[0].tag || 'Entrenamiento General'] = filteredWorkouts[0];
+
   for (let i = 1; i < filteredWorkouts.length; i++) {
-    const prevW = filteredWorkouts[i - 1];
     const currW = filteredWorkouts[i];
+    const currTag = currW.tag || 'Entrenamiento General';
     labels.push(currW.date.substring(5));
 
-    // Buscar ejercicios coincidentes
+    // Buscar la sesión previa de la misma rutina; si no existe, la sesión previa inmediata
+    const prevW = lastWorkoutByTag[currTag] || filteredWorkouts[i - 1];
+
+    // Buscar ejercicios coincidentes entre esta sesión y su anterior homóloga
     const matchedImprovements = [];
     currW.exercises.forEach(currEx => {
       const prevEx = prevW.exercises.find(e => e.exerciseId === currEx.exerciseId);
@@ -1503,28 +1509,73 @@ function updateHomeProgressChart() {
 
     let stepFactor = 0;
     if (matchedImprovements.length > 0) {
-      // Promedio de mejoría en ejercicios comunes
-      const avgImp = matchedImprovements.reduce((a, b) => a + b, 0) / matchedImprovements.length;
-      stepFactor = avgImp;
-    } else {
-      // Si no comparten ejercicios (o rutinas distintas sin filtrar), comparar volumen total
+      // Promedio de mejoría en ejercicios comunes de la rutina
+      stepFactor = matchedImprovements.reduce((a, b) => a + b, 0) / matchedImprovements.length;
+    } else if (prevW.id !== currW.id && prevW.tag === currW.tag) {
+      // Misma rutina pero sin ejercicios exactamente iguales: comparar volumen
       const prevVol = calculateSessionVolume(prevW);
       const currVol = calculateSessionVolume(currW);
       if (prevVol > 0) {
         stepFactor = (currVol - prevVol) / prevVol;
       }
+    } else {
+      // Primera vez que se hace esta rutina: no penaliza ni suma artificialmente
+      stepFactor = 0;
     }
 
-    // Suavizar saltos atípicos a +/- 25% por sesión para mantener escala lógica de progresión deportiva
+    // Suavizar posibles saltos atípicos a +/- 25% por sesión
     stepFactor = Math.max(-0.25, Math.min(0.25, stepFactor));
 
     const lastVal = progressPercentages[progressPercentages.length - 1];
     const nextVal = Math.round((lastVal * (1 + stepFactor)) * 10) / 10;
     progressPercentages.push(nextVal);
+
+    // Actualizar última sesión registrada para esta rutina
+    lastWorkoutByTag[currTag] = currW;
   }
 
-  // Mejoría total acumulada respecto a la primera sesión del periodo
-  const totalChange = Math.round((progressPercentages[progressPercentages.length - 1] - 100) * 10) / 10;
+  // Si estamos en la vista global ("Todas las rutinas"), el porcentaje resumen mostrado
+  // es la media aritmética de la progresión conseguida en cada rutina por separado.
+  let totalChange = 0;
+  if (selectedRoutine === 'all') {
+    const routineTags = [...new Set(sortedWorkouts.map(w => w.tag || 'Entrenamiento General').filter(Boolean))];
+    const routineDeltas = [];
+
+    routineTags.forEach(tag => {
+      const tagWorkouts = sortedWorkouts.filter(w => (w.tag || 'Entrenamiento General') === tag);
+      if (tagWorkouts.length >= 2) {
+        const firstW = tagWorkouts[0];
+        const lastW = tagWorkouts[tagWorkouts.length - 1];
+        const matchImp = [];
+        lastW.exercises.forEach(currEx => {
+          const firstEx = firstW.exercises.find(e => e.exerciseId === currEx.exerciseId);
+          if (firstEx && firstEx.sets.length > 0 && currEx.sets.length > 0) {
+            const f1RM = Math.max(...firstEx.sets.map(s => calculate1RM(parseFloat(s.weight) || 0, parseInt(s.reps) || 0)));
+            const l1RM = Math.max(...currEx.sets.map(s => calculate1RM(parseFloat(s.weight) || 0, parseInt(s.reps) || 0)));
+            if (f1RM > 0) matchImp.push((l1RM - f1RM) / f1RM);
+          }
+        });
+
+        if (matchImp.length > 0) {
+          const avg = matchImp.reduce((a, b) => a + b, 0) / matchImp.length;
+          routineDeltas.push(avg * 100);
+        } else {
+          const fVol = calculateSessionVolume(firstW);
+          const lVol = calculateSessionVolume(lastW);
+          if (fVol > 0) routineDeltas.push(((lVol - fVol) / fVol) * 100);
+        }
+      }
+    });
+
+    if (routineDeltas.length > 0) {
+      totalChange = Math.round((routineDeltas.reduce((a, b) => a + b, 0) / routineDeltas.length) * 10) / 10;
+    } else {
+      totalChange = Math.round((progressPercentages[progressPercentages.length - 1] - 100) * 10) / 10;
+    }
+  } else {
+    totalChange = Math.round((progressPercentages[progressPercentages.length - 1] - 100) * 10) / 10;
+  }
+
   const isPositive = totalChange >= 0;
 
   if (badge) {
