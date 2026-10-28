@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPRs();
   renderWeightHistory();
   setupChartControls();
+  setupHomeProgressChart();
   setupEventListeners();
   setupOnboardingAndRoutineWizard();
   setupEditRoutineModal();
@@ -581,7 +582,10 @@ function setupTabs() {
       }
     });
 
-    if (targetId === 'tab-calendar') renderCalendar();
+    if (targetId === 'tab-calendar') {
+      renderCalendar();
+      updateHomeProgressChart();
+    }
     if (targetId === 'tab-charts') updateChart();
     if (targetId === 'tab-history') {
       renderHistory();
@@ -1015,6 +1019,7 @@ function saveCurrentWorkout() {
 
   calendarSelectedDate = workoutDate;
   renderCalendar();
+  updateHomeProgressChart();
 }
 
 // -------------------------------------------------------------
@@ -1367,7 +1372,230 @@ function updateChart() {
 }
 
 // -------------------------------------------------------------
-// BIBLIOTECA DE EJERCICIOS Y PERSONALIZACIÓN
+// GRÁFICO DE MEJORÍA Y PROGRESIÓN EN PANTALLA DE INICIO
+// -------------------------------------------------------------
+let homeProgressChartInstance = null;
+
+function setupHomeProgressChart() {
+  const select = document.getElementById('home-progress-routine-select');
+  if (select) {
+    select.addEventListener('change', () => {
+      updateHomeProgressChart();
+    });
+  }
+  updateHomeProgressChart();
+}
+
+function updateHomeProgressChart() {
+  const ctx = document.getElementById('homeProgressChart');
+  const badge = document.getElementById('home-progress-badge');
+  const sub = document.getElementById('home-progress-sub');
+  const routineSelect = document.getElementById('home-progress-routine-select');
+  if (!ctx) return;
+
+  const rawWorkouts = DB.getWorkouts();
+  // Orden cronológico (antiguo a reciente)
+  const sortedWorkouts = rawWorkouts.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Actualizar opciones del selector de rutinas
+  if (routineSelect && rawWorkouts.length > 0) {
+    const tags = [...new Set(rawWorkouts.map(w => w.tag || 'Entrenamiento General').filter(Boolean))];
+    const currVal = routineSelect.value || 'all';
+    let html = '<option value="all">Todas las rutinas</option>';
+    tags.forEach(t => {
+      html += `<option value="${t}">${t}</option>`;
+    });
+    routineSelect.innerHTML = html;
+    routineSelect.value = tags.includes(currVal) ? currVal : 'all';
+  }
+
+  const selectedRoutine = routineSelect ? routineSelect.value : 'all';
+  const filteredWorkouts = selectedRoutine === 'all'
+    ? sortedWorkouts
+    : sortedWorkouts.filter(w => (w.tag || 'Entrenamiento General') === selectedRoutine);
+
+  if (filteredWorkouts.length < 2) {
+    if (badge) badge.innerText = filteredWorkouts.length === 1 ? '100%' : '--%';
+    if (sub) {
+      sub.innerText = filteredWorkouts.length === 1
+        ? 'Base inicial fijada. Registra tu próxima sesión para ver la mejora.'
+        : 'Registra entrenos para ver tu mejoría porcentual.';
+    }
+
+    if (homeProgressChartInstance) {
+      homeProgressChartInstance.destroy();
+      homeProgressChartInstance = null;
+    }
+
+    homeProgressChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: filteredWorkouts.length ? [filteredWorkouts[0].date.substring(5)] : ['Sin datos'],
+        datasets: [{
+          label: 'Rendimiento Base',
+          data: filteredWorkouts.length ? [100] : [0],
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4,
+          pointBackgroundColor: '#10b981'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#160c2b',
+            titleColor: '#f3e8ff',
+            bodyColor: '#e9d5ff',
+            borderColor: '#34d399',
+            borderWidth: 1,
+            callbacks: {
+              label: (item) => `Rendimiento: ${item.formattedValue}%`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(74, 29, 117, 0.15)' },
+            ticks: { color: '#a78bfa', font: { size: 9 } }
+          },
+          y: {
+            min: 80,
+            max: 120,
+            grid: { color: 'rgba(74, 29, 117, 0.15)' },
+            ticks: { color: '#a78bfa', font: { size: 9 }, callback: (v) => `${v}%` }
+          }
+        }
+      }
+    });
+    return;
+  }
+
+  // CALCULAR MEJORÍA RELATIVA ENTRE SESIONES CONSECUTIVAS:
+  // Se compara cada sesión contra la anterior calculando la mejoría de fuerza (1RM estimado) 
+  // en los ejercicios coincidentes (para medir progresión real y no variación de volumen por número de ejercicios).
+  // Si no hay ejercicios coincidentes, se utiliza la variación de volumen de la sesión.
+  const baselineIndex = 100;
+  const progressPercentages = [baselineIndex];
+  const labels = [filteredWorkouts[0].date.substring(5)];
+
+  for (let i = 1; i < filteredWorkouts.length; i++) {
+    const prevW = filteredWorkouts[i - 1];
+    const currW = filteredWorkouts[i];
+    labels.push(currW.date.substring(5));
+
+    // Buscar ejercicios coincidentes
+    const matchedImprovements = [];
+    currW.exercises.forEach(currEx => {
+      const prevEx = prevW.exercises.find(e => e.exerciseId === currEx.exerciseId);
+      if (prevEx && prevEx.sets.length > 0 && currEx.sets.length > 0) {
+        const prev1RM = Math.max(...prevEx.sets.map(s => calculate1RM(parseFloat(s.weight) || 0, parseInt(s.reps) || 0)));
+        const curr1RM = Math.max(...currEx.sets.map(s => calculate1RM(parseFloat(s.weight) || 0, parseInt(s.reps) || 0)));
+        if (prev1RM > 0) {
+          matchedImprovements.push((curr1RM - prev1RM) / prev1RM);
+        }
+      }
+    });
+
+    let stepFactor = 0;
+    if (matchedImprovements.length > 0) {
+      // Promedio de mejoría en ejercicios comunes
+      const avgImp = matchedImprovements.reduce((a, b) => a + b, 0) / matchedImprovements.length;
+      stepFactor = avgImp;
+    } else {
+      // Si no comparten ejercicios (o rutinas distintas sin filtrar), comparar volumen total
+      const prevVol = calculateSessionVolume(prevW);
+      const currVol = calculateSessionVolume(currW);
+      if (prevVol > 0) {
+        stepFactor = (currVol - prevVol) / prevVol;
+      }
+    }
+
+    // Suavizar saltos atípicos a +/- 25% por sesión para mantener escala lógica de progresión deportiva
+    stepFactor = Math.max(-0.25, Math.min(0.25, stepFactor));
+
+    const lastVal = progressPercentages[progressPercentages.length - 1];
+    const nextVal = Math.round((lastVal * (1 + stepFactor)) * 10) / 10;
+    progressPercentages.push(nextVal);
+  }
+
+  // Mejoría total acumulada respecto a la primera sesión del periodo
+  const totalChange = Math.round((progressPercentages[progressPercentages.length - 1] - 100) * 10) / 10;
+  const isPositive = totalChange >= 0;
+
+  if (badge) {
+    badge.innerText = `${isPositive ? '+' : ''}${totalChange}%`;
+    badge.className = `text-2xl font-black mono tracking-tight ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`;
+  }
+  if (sub) {
+    sub.innerText = `${isPositive ? 'Progreso positivo' : 'Descenso de rendimiento'} vs 1ª sesión (${filteredWorkouts.length} entrenos)`;
+  }
+
+  const primaryColor = isPositive ? '#10b981' : '#f43f5e';
+  const fillColor = isPositive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+
+  if (homeProgressChartInstance) {
+    homeProgressChartInstance.destroy();
+    homeProgressChartInstance = null;
+  }
+
+  homeProgressChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Nivel de Rendimiento',
+        data: progressPercentages,
+        borderColor: primaryColor,
+        backgroundColor: fillColor,
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2.5,
+        pointRadius: 3.5,
+        pointHoverRadius: 5.5,
+        pointBackgroundColor: primaryColor
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#160c2b',
+          titleColor: '#f3e8ff',
+          bodyColor: '#e9d5ff',
+          borderColor: isPositive ? '#34d399' : '#fb7185',
+          borderWidth: 1,
+          callbacks: {
+            label: (item) => {
+              const diffFromBase = Math.round((item.raw - 100) * 10) / 10;
+              return `Rendimiento: ${item.raw}% (${diffFromBase >= 0 ? '+' : ''}${diffFromBase}%)`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(74, 29, 117, 0.15)' },
+          ticks: { color: '#a78bfa', font: { size: 9 } }
+        },
+        y: {
+          grid: { color: 'rgba(74, 29, 117, 0.15)' },
+          ticks: {
+            color: '#a78bfa',
+            font: { size: 9 },
+            callback: (v) => `${v}%`
+          }
+        }
+      }
+    }
+  });
+}
 // -------------------------------------------------------------
 let currentExCategoryFilter = 'all';
 

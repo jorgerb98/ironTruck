@@ -102,6 +102,36 @@
         </button>
       </div>
 
+      <!-- PROGRESSION / MEJORÍA PERCENTAGE CARD -->
+      <div class="glass-card rounded-3xl p-4 sm:p-5 shadow-2xl relative overflow-hidden">
+        <div class="flex items-start justify-between">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+              </span>
+              <h3 class="text-xs font-black uppercase tracking-wider text-white">Evolución &amp; Mejoría</h3>
+            </div>
+            <div class="flex items-baseline space-x-2">
+              <span id="home-progress-badge" class="text-2xl font-black mono text-emerald-400 tracking-tight">--%</span>
+              <span id="home-progress-sub" class="text-[11px] text-purple-300/70 font-medium">calculando...</span>
+            </div>
+          </div>
+          <!-- Selector de Rutina para ver su progresión específica -->
+          <div class="w-36 sm:w-44">
+            <select id="home-progress-routine-select" class="w-full bg-[#120a22]/90 border border-purple-500/25 rounded-xl px-2.5 py-1.5 text-[11px] text-purple-100 focus:outline-none focus:border-fuchsia-400 truncate">
+              <option value="all">Todas las rutinas</option>
+              <!-- Filled via JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Mini Chart Canvas -->
+        <div class="relative w-full h-32 sm:h-36 mt-3">
+          <canvas id="homeProgressChart"></canvas>
+        </div>
+      </div>
+
       <!-- Calendar Container Card -->
       <div class="glass-card rounded-3xl p-4.5 sm:p-5 shadow-2xl">
         <div class="flex items-center justify-between mb-3 px-1">
