@@ -453,8 +453,17 @@ function loadRoutineIntoSession(routine) {
   const tagInput = document.getElementById('workout-tag');
   if (tagInput) tagInput.value = routine.name;
 
+  const allEx = DB.getExercises();
+  const exMap = {};
+  allEx.forEach(e => exMap[e.id] = e);
+
   currentSession.exercises = routine.exercises.map(re => {
-    const numSets = re.targetSets || 3;
+    // Garantizar que numSets sea un número válido mayor que 0
+    let numSets = parseInt(re.targetSets, 10);
+    if (isNaN(numSets) || numSets <= 0) {
+      numSets = 3;
+    }
+
     const lastPerf = findLastPerformance(re.exerciseId);
     const sets = [];
     for (let i = 0; i < numSets; i++) {
@@ -467,10 +476,8 @@ function loadRoutineIntoSession(routine) {
 
     // Buscar rango de reps recomendado si no lo tiene explícito
     let targetReps = re.targetReps;
-    if (!targetReps) {
-      const allEx = DB.getExercises();
-      const exObj = allEx.find(e => e.id === re.exerciseId);
-      if (exObj && exObj.targetReps) targetReps = exObj.targetReps;
+    if (!targetReps && exMap[re.exerciseId] && exMap[re.exerciseId].targetReps) {
+      targetReps = exMap[re.exerciseId].targetReps;
     }
 
     return {

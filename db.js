@@ -299,8 +299,45 @@ const DB = {
     try {
       const data = JSON.parse(jsonString);
       if (data.profile) localStorage.setItem('it_profile', JSON.stringify(data.profile));
-      if (data.routines) localStorage.setItem('it_routines', JSON.stringify(data.routines));
-      if (data.exercises) localStorage.setItem('it_exercises', JSON.stringify(data.exercises));
+
+      // Asegurar que las rutinas y ejercicios importados mantengan o incorporen
+      // sus rangos de repeticiones y targetSets
+      if (data.exercises) {
+        const defaultExMap = {};
+        DEFAULT_EXERCISES.forEach(e => defaultExMap[e.id] = e);
+        const mergedExercises = data.exercises.map(ex => {
+          if (!ex.targetReps && defaultExMap[ex.id]) {
+            ex.targetReps = defaultExMap[ex.id].targetReps;
+          }
+          return ex;
+        });
+        localStorage.setItem('it_exercises', JSON.stringify(mergedExercises));
+      }
+
+      if (data.routines) {
+        const allExercises = DB.getExercises();
+        const exMap = {};
+        allExercises.forEach(e => exMap[e.id] = e);
+
+        const sanitizedRoutines = data.routines.map(r => {
+          if (r.exercises) {
+            r.exercises = r.exercises.map(re => {
+              // Asegurar que targetSets sea un número válido > 0
+              if (!re.targetSets || typeof re.targetSets !== 'number' || isNaN(re.targetSets)) {
+                re.targetSets = 3;
+              }
+              // Asegurar que tenga el targetReps si falta
+              if (!re.targetReps && exMap[re.exerciseId] && exMap[re.exerciseId].targetReps) {
+                re.targetReps = exMap[re.exerciseId].targetReps;
+              }
+              return re;
+            });
+          }
+          return r;
+        });
+        localStorage.setItem('it_routines', JSON.stringify(sanitizedRoutines));
+      }
+
       if (data.workouts) localStorage.setItem('it_workouts', JSON.stringify(data.workouts));
       if (data.weights) localStorage.setItem('it_weights', JSON.stringify(data.weights));
       localStorage.setItem('it_onboarding_done', 'true');
