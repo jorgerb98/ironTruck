@@ -56,51 +56,51 @@ let wizardRoutineState = {
     {
       title: 'Día 1 - Upper A',
       exercises: [
-        { exerciseId: 'machine-chest-press', exerciseName: 'Press en Máquina Sentado', targetSets: 3 },
-        { exerciseId: 'lat-pulldown', exerciseName: 'Jalón al Pecho en Polea', targetSets: 3 },
-        { exerciseId: 'overhead-press', exerciseName: 'Press Militar de Pie con Barra', targetSets: 3 },
-        { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
-        { exerciseId: 'chest-fly-cable-machine', exerciseName: 'Mariposa maquina', targetSets: 2 },
-        { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
-        { exerciseId: 'barbell-curl', exerciseName: 'Curl de Bíceps con Barra Z', targetSets: 2 },
-        { exerciseId: 'tricep-pushdown', exerciseName: 'Extensiones de Tríceps en Polea', targetSets: 2 }
+        { exerciseId: 'machine-chest-press', exerciseName: 'Press en Máquina Sentado', targetSets: 3, targetReps: '6-10' },
+        { exerciseId: 'lat-pulldown', exerciseName: 'Jalón al Pecho en Polea', targetSets: 3, targetReps: '6-10' },
+        { exerciseId: 'overhead-press', exerciseName: 'Press Militar de Pie con Barra', targetSets: 3, targetReps: '6-10' },
+        { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3, targetReps: '8-12' },
+        { exerciseId: 'chest-fly-cable-machine', exerciseName: 'Mariposa maquina', targetSets: 2, targetReps: '10-15' },
+        { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3, targetReps: '12-20' },
+        { exerciseId: 'barbell-curl', exerciseName: 'Curl de Bíceps con Barra Z', targetSets: 2, targetReps: '8-12' },
+        { exerciseId: 'tricep-pushdown', exerciseName: 'Extensiones de Tríceps en Polea', targetSets: 2, targetReps: '8-12' }
       ]
     },
     {
       title: 'Día 2 - Lower A',
       exercises: [
-        { exerciseId: 'barbell-squat', exerciseName: 'Sentadilla Trasera con Barra', targetSets: 3 },
-        { exerciseId: 'romanian-deadlift', exerciseName: 'Peso Muerto Rumano', targetSets: 3 },
-        { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3 },
-        { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2 },
-        { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2 },
-        { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3 },
-        { exerciseId: 'aductors', exerciseName: 'Aductores', targetSets: 2 }
+        { exerciseId: 'barbell-squat', exerciseName: 'Sentadilla Trasera con Barra', targetSets: 3, targetReps: '6-10' },
+        { exerciseId: 'romanian-deadlift', exerciseName: 'Peso Muerto Rumano', targetSets: 3, targetReps: '6-10' },
+        { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3, targetReps: '8-12' },
+        { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2, targetReps: '10-15' },
+        { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2, targetReps: '10-15' },
+        { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3, targetReps: '8-15' },
+        { exerciseId: 'aductors', exerciseName: 'Aductores', targetSets: 2, targetReps: '12-20' }
       ]
     },
     {
       title: 'Día 3 - Upper B',
       exercises: [
-        { exerciseId: 'incline-db-press', exerciseName: 'Press Inclinado con Mancuernas', targetSets: 3 },
-        { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3 },
-        { exerciseId: 'lat-pulldown-neutr', exerciseName: 'Jalón al Pecho agarre Neutro', targetSets: 3 },
-        { exerciseId: 'db-shoulder-press-machine', exerciseName: 'Press de Hombro', targetSets: 3 },
-        { exerciseId: 'face-pull', exerciseName: 'Face Pull en Polea con Cuerda', targetSets: 3 },
-        { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3 },
-        { exerciseId: 'bicep-curl-unilateral', exerciseName: 'Curl de Bíceps Unilateral', targetSets: 3 },
-        { exerciseId: 'tricep-aboveHead', exerciseName: 'Extensiones de Tríceps encima cabeza', targetSets: 3 }
+        { exerciseId: 'incline-db-press', exerciseName: 'Press Inclinado con Mancuernas', targetSets: 3, targetReps: '6-10' },
+        { exerciseId: 'barbell-row-machine', exerciseName: 'Remo maquina / 90°', targetSets: 3, targetReps: '6-10' },
+        { exerciseId: 'lat-pulldown-neutr', exerciseName: 'Jalón al Pecho agarre Neutro', targetSets: 3, targetReps: '8-12' },
+        { exerciseId: 'db-shoulder-press-machine', exerciseName: 'Press de Hombro', targetSets: 3, targetReps: '8-12' },
+        { exerciseId: 'face-pull', exerciseName: 'Face Pull en Polea con Cuerda', targetSets: 3, targetReps: '12-20' },
+        { exerciseId: 'lateral-raises', exerciseName: 'Elevaciones Laterales', targetSets: 3, targetReps: '12-20' },
+        { exerciseId: 'bicep-curl-unilateral', exerciseName: 'Curl de Bíceps Unilateral', targetSets: 3, targetReps: '10-15' },
+        { exerciseId: 'tricep-aboveHead', exerciseName: 'Extensiones de Tríceps encima cabeza', targetSets: 3, targetReps: '10-15' }
       ]
     },
     {
       title: 'Día 4 - Lower B',
       exercises: [
-        { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3 },
-        { exerciseId: 'hipThrust', exerciseName: 'Hip Thrust', targetSets: 3 },
-        { exerciseId: 'bulgarian', exerciseName: 'Sentadillas bulgaras', targetSets: 3 },
-        { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2 },
-        { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2 },
-        { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3 },
-        { exerciseId: 'abductors', exerciseName: 'Abductores', targetSets: 2 }
+        { exerciseId: 'leg-press', exerciseName: 'Prensa Inclinada a 45°', targetSets: 3, targetReps: '8-12' },
+        { exerciseId: 'hipThrust', exerciseName: 'Hip Thrust', targetSets: 3, targetReps: '6-10' },
+        { exerciseId: 'bulgarian', exerciseName: 'Sentadillas bulgaras', targetSets: 3, targetReps: '8-12' },
+        { exerciseId: 'leg-curl', exerciseName: 'Curl Femoral Tumbado/Sentado', targetSets: 2, targetReps: '10-15' },
+        { exerciseId: 'leg-extension', exerciseName: 'Extensión de Cuádriceps', targetSets: 2, targetReps: '10-15' },
+        { exerciseId: 'calf-raise', exerciseName: 'Elevación de Gemelos de Pie', targetSets: 3, targetReps: '10-15' },
+        { exerciseId: 'abductors', exerciseName: 'Abductores', targetSets: 2, targetReps: '12-20' }
       ]
     }
   ]
@@ -465,9 +465,18 @@ function loadRoutineIntoSession(routine) {
       });
     }
 
+    // Buscar rango de reps recomendado si no lo tiene explícito
+    let targetReps = re.targetReps;
+    if (!targetReps) {
+      const allEx = DB.getExercises();
+      const exObj = allEx.find(e => e.id === re.exerciseId);
+      if (exObj && exObj.targetReps) targetReps = exObj.targetReps;
+    }
+
     return {
       exerciseId: re.exerciseId,
       exerciseName: re.exerciseName,
+      targetReps: targetReps || null,
       sets
     };
   });
@@ -765,13 +774,21 @@ function renderSelectedDayDetails(dateStr) {
           <span class="text-xs font-bold text-fuchsia-400">${totalVol.toLocaleString()} kg</span>
         </div>
         
-        <div class="text-[11px] text-purple-200/70 space-y-1 pt-1 border-t border-[#2a1445]">
-          ${w.exercises.map(ex => `
-            <div class="flex justify-between items-center">
-              <span class="truncate max-w-[65%]">${ex.exerciseName}</span>
-              <span class="font-mono text-purple-400">${ex.sets.length} series</span>
+        <div class="text-[11px] text-purple-200/70 space-y-1.5 pt-1.5 border-t border-[#2a1445]">
+          ${w.exercises.map(ex => {
+            const lastSet = (ex.sets && ex.sets.length > 0) ? ex.sets[ex.sets.length - 1] : null;
+            const lastSetDetails = lastSet
+              ? `<span class="mono text-[10px] text-fuchsia-300 font-bold bg-fuchsia-500/10 px-1.5 py-0.5 rounded border border-fuchsia-500/20">${lastSet.weight || 0}kg × ${lastSet.reps || 0}</span>`
+              : '';
+            return `
+            <div class="flex justify-between items-center py-0.5">
+              <span class="truncate max-w-[55%] font-medium text-white/90">${ex.exerciseName}</span>
+              <div class="flex items-center space-x-2">
+                ${lastSetDetails}
+                <span class="font-mono text-purple-400 text-[11px]">${ex.sets.length} series</span>
+              </div>
             </div>
-          `).join('')}
+          `}).join('')}
         </div>
       </div>
     `;
@@ -803,6 +820,7 @@ function addExerciseToSession(exerciseId) {
   const newExerciseEntry = {
     exerciseId: exercise.id,
     exerciseName: exercise.name,
+    targetReps: exercise.targetReps || null,
     sets: [
       {
         weight: lastSetInfo ? lastSetInfo.weight : 0,
@@ -860,14 +878,21 @@ function renderSessionExercises() {
     const muscleIcon = getMuscleIcon(category);
     const exerciseVolume = item.sets.reduce((sum, s) => sum + ((parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0)), 0);
 
+    const targetRepsBadge = (item.targetReps || (exData && exData.targetReps))
+      ? `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-purple-500/20 text-fuchsia-300 border border-purple-500/30 text-[10px] font-black mono"><i data-lucide="target" class="w-2.5 h-2.5 mr-0.5"></i>${item.targetReps || exData.targetReps} reps</span>`
+      : '';
+
     return `
       <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl p-4 shadow-lg space-y-3">
         <div class="flex items-start justify-between">
           <div class="flex items-start space-x-2">
             <div class="flex-shrink-0 mt-0.5">${muscleIcon}</div>
             <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">Ejercicio ${exIndex + 1}</span>
-              <h3 class="text-sm font-bold text-white leading-tight">${item.exerciseName}</h3>
+              <div class="flex items-center space-x-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">Ejercicio ${exIndex + 1}</span>
+                ${targetRepsBadge}
+              </div>
+              <h3 class="text-sm font-bold text-white leading-tight mt-0.5">${item.exerciseName}</h3>
               <p class="text-[11px] text-purple-300/70 mt-0.5">Volumen ejercicio: <span class="text-fuchsia-400 font-semibold">${exerciseVolume} kg</span></p>
             </div>
           </div>
