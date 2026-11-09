@@ -893,74 +893,84 @@ function renderSessionExercises() {
       ? `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-purple-500/20 text-fuchsia-300 border border-purple-500/30 text-[10px] font-black mono"><i data-lucide="target" class="w-2.5 h-2.5 mr-0.5"></i>${item.targetReps || exData.targetReps} reps</span>`
       : '';
 
+    const setsCount = item.sets.length;
+    const collapseId = `ex-collapse-${exIndex}`;
+
     return `
-      <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl p-4 shadow-lg space-y-3">
-        <div class="flex items-start justify-between">
-          <div class="flex items-start space-x-2">
-            <div class="flex-shrink-0 mt-0.5">${muscleIcon}</div>
-            <div>
-              <div class="flex items-center space-x-2">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">Ejercicio ${exIndex + 1}</span>
+      <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl shadow-lg overflow-hidden">
+        <!-- CABECERA COLAPSABLE -->
+        <button onclick="toggleExerciseCollapse('${collapseId}', this)"
+          class="w-full flex items-center justify-between p-4 text-left active:bg-[#180e2a] transition">
+          <div class="flex items-center space-x-2 min-w-0">
+            <div class="flex-shrink-0">${muscleIcon}</div>
+            <div class="min-w-0">
+              <div class="flex items-center space-x-2 flex-wrap gap-y-0.5">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">Ej. ${exIndex + 1}</span>
                 ${targetRepsBadge}
               </div>
-              <h3 class="text-sm font-bold text-white leading-tight mt-0.5">${item.exerciseName}</h3>
-              <p class="text-[11px] text-purple-300/70 mt-0.5">Volumen ejercicio: <span class="text-fuchsia-400 font-semibold">${exerciseVolume} kg</span></p>
+              <h3 class="text-sm font-bold text-white leading-tight truncate">${item.exerciseName}</h3>
             </div>
           </div>
-          <button onclick="removeExerciseFromSession(${exIndex})" class="p-1 text-purple-400/60 hover:text-rose-400 transition" title="Eliminar ejercicio">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          <div class="flex items-center space-x-2.5 flex-shrink-0 ml-2">
+            <span class="text-[11px] font-semibold text-fuchsia-400 mono">${exerciseVolume > 0 ? exerciseVolume + ' kg' : ''}</span>
+            <span class="text-[11px] text-purple-400 font-semibold">${setsCount} ${setsCount === 1 ? 'serie' : 'series'}</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-purple-400 transition-transform duration-200 ex-chevron"></i>
+            <button onclick="event.stopPropagation(); removeExerciseFromSession(${exIndex})" class="p-1 text-purple-400/50 hover:text-rose-400 transition" title="Eliminar ejercicio">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </button>
+
+        <!-- CONTENIDO DESPLEGABLE -->
+        <div id="${collapseId}" class="hidden px-4 pb-4 space-y-3 border-t border-[#2a1645]">
+          <div class="pt-3 space-y-2">
+            <!-- Cabecera tabla -->
+            <div class="grid grid-cols-12 gap-1 text-[10px] font-semibold text-purple-300/60 uppercase tracking-wider text-center px-1">
+              <div class="col-span-2">Serie</div>
+              <div class="col-span-4">Carga (kg)</div>
+              <div class="col-span-3">Reps</div>
+              <div class="col-span-2">RIR</div>
+              <div class="col-span-1"></div>
+            </div>
+
+            <div class="space-y-1.5">
+              ${item.sets.map((set, setIndex) => `
+                <div class="grid grid-cols-12 gap-1 items-center bg-[#170e28] p-1.5 rounded-xl border border-[#2f184e]">
+                  <div class="col-span-2 text-center text-xs font-bold text-purple-400">#${setIndex + 1}</div>
+                  <div class="col-span-4">
+                    <input type="number" step="0.5" value="${set.weight}" placeholder="0"
+                      onchange="updateSetData(${exIndex}, ${setIndex}, 'weight', this.value)"
+                      class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1.5 text-center text-xs text-white font-semibold focus:outline-none focus:border-purple-500">
+                  </div>
+                  <div class="col-span-3">
+                    <input type="number" min="1" value="${set.reps || 1}" placeholder="1"
+                      onchange="updateSetData(${exIndex}, ${setIndex}, 'reps', this.value)"
+                      class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1.5 text-center text-xs text-white font-semibold focus:outline-none focus:border-purple-500">
+                  </div>
+                  <div class="col-span-2">
+                    <input type="number" step="1" max="6" min="0" value="${set.rir !== undefined ? set.rir : 2}"
+                      onchange="updateSetData(${exIndex}, ${setIndex}, 'rir', this.value)"
+                      class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1 text-center text-[11px] text-purple-200 focus:outline-none focus:border-purple-500" placeholder="2" title="RIR">
+                  </div>
+                  <div class="col-span-1 text-center flex flex-col items-center gap-0.5">
+                    ${setIndex < item.sets.length - 1 ? `
+                    <button onclick="copySetToNext(${exIndex}, ${setIndex})" class="text-fuchsia-400/70 hover:text-fuchsia-300 p-0.5" title="Copiar a siguiente">
+                      <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>` : `<div class="w-3 h-3"></div>`}
+                    <button onclick="removeSet(${exIndex}, ${setIndex})" class="text-purple-400/50 hover:text-rose-400 p-0.5">
+                      <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <button onclick="addSetToExercise(${exIndex})" class="w-full py-1.5 rounded-lg bg-[#180e2a] hover:bg-[#23133d] text-purple-300 text-xs font-semibold flex items-center justify-center space-x-1 border border-[#37195c] transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5 text-fuchsia-400"></i>
+            <span>Añadir Serie</span>
           </button>
         </div>
-
-        <div class="space-y-2">
-          <!-- Cabecera de la tabla con RIR en vez de RPE -->
-          <div class="grid grid-cols-12 gap-1 text-[10px] font-semibold text-purple-300/60 uppercase tracking-wider text-center px-1">
-            <div class="col-span-2">Serie</div>
-            <div class="col-span-4">Carga (kg)</div>
-            <div class="col-span-3">Reps</div>
-            <div class="col-span-2">RIR</div>
-            <div class="col-span-1"></div>
-          </div>
-
-          <div class="space-y-1.5">
-            ${item.sets.map((set, setIndex) => `
-              <div class="grid grid-cols-12 gap-1 items-center bg-[#170e28] p-1.5 rounded-xl border border-[#2f184e]">
-                <div class="col-span-2 text-center text-xs font-bold text-purple-400">
-                  #${setIndex + 1}
-                </div>
-                <div class="col-span-4">
-                  <input type="number" step="0.5" value="${set.weight}" placeholder="0"
-                    onchange="updateSetData(${exIndex}, ${setIndex}, 'weight', this.value)"
-                    class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1.5 text-center text-xs text-white font-semibold focus:outline-none focus:border-purple-500">
-                </div>
-                <div class="col-span-3">
-                  <input type="number" min="1" value="${set.reps || 1}" placeholder="1"
-                    onchange="updateSetData(${exIndex}, ${setIndex}, 'reps', this.value)"
-                    class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1.5 text-center text-xs text-white font-semibold focus:outline-none focus:border-purple-500">
-                </div>
-                <div class="col-span-2">
-                  <input type="number" step="1" max="6" min="0" value="${set.rir !== undefined ? set.rir : 2}" 
-                    onchange="updateSetData(${exIndex}, ${setIndex}, 'rir', this.value)"
-                    class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1 text-center text-[11px] text-purple-200 focus:outline-none focus:border-purple-500" placeholder="2" title="Repeticiones en Reserva (RIR)">
-                </div>
-                <div class="col-span-1 text-center flex flex-col items-center gap-0.5">
-                  ${setIndex < item.sets.length - 1 ? `
-                  <button onclick="copySetToNext(${exIndex}, ${setIndex})" class="text-fuchsia-400/70 hover:text-fuchsia-300 p-0.5" title="Copiar a la serie siguiente">
-                    <i data-lucide="copy" class="w-3 h-3"></i>
-                  </button>` : `<div class="w-3 h-3"></div>`}
-                  <button onclick="removeSet(${exIndex}, ${setIndex})" class="text-purple-400/50 hover:text-rose-400 p-0.5">
-                    <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
-                  </button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <button onclick="addSetToExercise(${exIndex})" class="w-full py-1.5 rounded-lg bg-[#180e2a] hover:bg-[#23133d] text-purple-300 text-xs font-semibold flex items-center justify-center space-x-1 border border-[#37195c] transition">
-          <i data-lucide="plus" class="w-3.5 h-3.5 text-fuchsia-400"></i>
-          <span>Añadir Serie</span>
-        </button>
       </div>
     `;
   }).join('');
@@ -971,6 +981,15 @@ function renderSessionExercises() {
   `;
 
   lucide.createIcons();
+}
+
+function toggleExerciseCollapse(collapseId, btn) {
+  const panel = document.getElementById(collapseId);
+  if (!panel) return;
+  const chevron = btn.querySelector('.ex-chevron');
+  const isHidden = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !isHidden);
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
 }
 
 function updateSetData(exIndex, setIndex, field, value) {
@@ -2189,495 +2208,344 @@ function getDinoForKg(totalKg) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXPORTAR TARJETA DEL DÍA COMO PNG
+// EXPORTAR TARJETA DEL DÍA COMO PNG — Estilo Strava, fondo transparente
 // ─────────────────────────────────────────────────────────────────────────────
 async function exportDayCardToPNG(dateStr) {
   const workouts = DB.getWorkouts().filter(w => w.date === dateStr);
-
-  if (workouts.length === 0) {
-    showToast('No hay entrenos este día para exportar');
-    return;
-  }
+  if (workouts.length === 0) { showToast('No hay entrenos este día para exportar'); return; }
 
   showToast('Generando tarjeta... ⏳');
 
-  // ── DATOS DEL DÍA ──────────────────────────────────────────────────────────
+  // ── DATOS ──────────────────────────────────────────────────────────────────
   const totalKg = workouts.reduce((sum, w) => sum + calculateSessionVolume(w), 0);
   const totalSeries = workouts.reduce((sum, w) =>
     sum + w.exercises.reduce((s, ex) => s + (ex.sets ? ex.sets.length : 0), 0), 0);
   const tags = [...new Set(workouts.map(w => w.tag || 'Entrenamiento General'))];
   const tagLabel = tags.join(' · ');
   const dino = getDinoForKg(totalKg);
-
   const dateObj = new Date(dateStr + 'T00:00:00');
-  const dateFormatted = dateObj.toLocaleDateString('es-ES', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-  });
+  const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-  // ── CALCULAR MEJORA ─────────────────────────────────────────────────────────
-  // Comparar con la sesión anterior de la misma rutina
-  const allWorkoutsSorted = DB.getWorkouts().sort((a, b) => new Date(a.date) - new Date(b.date));
-  let improvementText = null;
+  // ── MEJORA ─────────────────────────────────────────────────────────────────
+  const allSorted = DB.getWorkouts().sort((a, b) => new Date(a.date) - new Date(b.date));
   let improvementValue = null;
-
   for (const tag of tags) {
-    const tagWorkouts = allWorkoutsSorted.filter(w => (w.tag || 'Entrenamiento General') === tag);
-    const idx = tagWorkouts.findIndex(w => w.date === dateStr);
+    const tw = allSorted.filter(w => (w.tag || 'Entrenamiento General') === tag);
+    const idx = tw.findIndex(w => w.date === dateStr);
     if (idx > 0) {
-      const currW = tagWorkouts[idx];
-      const prevW = tagWorkouts[idx - 1];
-      const matchedImps = [];
-      currW.exercises.forEach(currEx => {
-        const prevEx = prevW.exercises.find(e => e.exerciseId === currEx.exerciseId);
-        if (prevEx && prevEx.sets.length > 0 && currEx.sets.length > 0) {
-          const prev1RM = Math.max(...prevEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
-          const curr1RM = Math.max(...currEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
-          if (prev1RM > 0) matchedImps.push((curr1RM - prev1RM) / prev1RM);
-        }
-      });
-      if (matchedImps.length > 0) {
-        improvementValue = Math.round((matchedImps.reduce((a,b)=>a+b,0)/matchedImps.length)*1000)/10;
-        improvementText = `${improvementValue >= 0 ? '+' : ''}${improvementValue}% vs sesión anterior`;
-        break;
-      }
-    }
-  }
-
-  // ── CANVAS SETUP ───────────────────────────────────────────────────────────
-  const W = 1080;
-  const H = 1920;
-  const canvas = document.getElementById('export-canvas');
-  canvas.width = W;
-  canvas.height = H;
-  const ctx2d = canvas.getContext('2d');
-
-  // --- FONDO OSCURO con gradientes ---
-  const bg = ctx2d.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#080511');
-  bg.addColorStop(1, '#0e0820');
-  ctx2d.fillStyle = bg;
-  ctx2d.fillRect(0, 0, W, H);
-
-  // Halo morado top-left
-  const gTL = ctx2d.createRadialGradient(0, 0, 0, 0, 0, 700);
-  gTL.addColorStop(0, 'rgba(168,85,247,0.22)');
-  gTL.addColorStop(1, 'transparent');
-  ctx2d.fillStyle = gTL;
-  ctx2d.fillRect(0, 0, W, H);
-
-  // Halo fucsia top-right
-  const gTR = ctx2d.createRadialGradient(W, 0, 0, W, 0, 600);
-  gTR.addColorStop(0, 'rgba(236,72,153,0.16)');
-  gTR.addColorStop(1, 'transparent');
-  ctx2d.fillStyle = gTR;
-  ctx2d.fillRect(0, 0, W, H);
-
-  // Halo morado bottom-center
-  const gBC = ctx2d.createRadialGradient(W/2, H, 0, W/2, H, 700);
-  gBC.addColorStop(0, 'rgba(147,51,234,0.18)');
-  gBC.addColorStop(1, 'transparent');
-  ctx2d.fillStyle = gBC;
-  ctx2d.fillRect(0, 0, W, H);
-
-  // Micro-grid
-  ctx2d.save();
-  ctx2d.strokeStyle = 'rgba(255,255,255,0.025)';
-  ctx2d.lineWidth = 1;
-  const gridSize = 54;
-  for (let x = 0; x <= W; x += gridSize) { ctx2d.beginPath(); ctx2d.moveTo(x, 0); ctx2d.lineTo(x, H); ctx2d.stroke(); }
-  for (let y = 0; y <= H; y += gridSize) { ctx2d.beginPath(); ctx2d.moveTo(0, y); ctx2d.lineTo(W, y); ctx2d.stroke(); }
-  ctx2d.restore();
-
-  // ── HELPER: rounded rect ───────────────────────────────────────────────────
-  function roundRect(x, y, w, h, r) {
-    ctx2d.beginPath();
-    ctx2d.moveTo(x + r, y);
-    ctx2d.lineTo(x + w - r, y);
-    ctx2d.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx2d.lineTo(x + w, y + h - r);
-    ctx2d.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx2d.lineTo(x + r, y + h);
-    ctx2d.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx2d.lineTo(x, y + r);
-    ctx2d.quadraticCurveTo(x, y, x + r, y);
-    ctx2d.closePath();
-  }
-
-  // ── LOGO "IT" badge ────────────────────────────────────────────────────────
-  const logoX = W/2;
-  const logoY = 180;
-  const logoR = 68;
-
-  // Glow exterior
-  const logoGlow = ctx2d.createRadialGradient(logoX, logoY, 0, logoX, logoY, logoR + 40);
-  logoGlow.addColorStop(0, 'rgba(217,70,239,0.3)');
-  logoGlow.addColorStop(1, 'transparent');
-  ctx2d.fillStyle = logoGlow;
-  ctx2d.beginPath();
-  ctx2d.arc(logoX, logoY, logoR + 40, 0, Math.PI * 2);
-  ctx2d.fill();
-
-  // Badge gradient
-  const logoBg = ctx2d.createLinearGradient(logoX - logoR, logoY - logoR, logoX + logoR, logoY + logoR);
-  logoBg.addColorStop(0, '#7c3aed');
-  logoBg.addColorStop(0.5, '#c026d3');
-  logoBg.addColorStop(1, '#ec4899');
-  roundRect(logoX - logoR, logoY - logoR, logoR * 2, logoR * 2, 36);
-  ctx2d.fillStyle = logoBg;
-  ctx2d.fill();
-
-  // "IT" text
-  ctx2d.fillStyle = '#ffffff';
-  ctx2d.font = 'bold 72px "JetBrains Mono", monospace';
-  ctx2d.textAlign = 'center';
-  ctx2d.textBaseline = 'middle';
-  ctx2d.fillText('IT', logoX, logoY);
-
-  // Green dot
-  ctx2d.beginPath();
-  ctx2d.arc(logoX + logoR - 12, logoY - logoR + 12, 16, 0, Math.PI * 2);
-  ctx2d.fillStyle = '#10b981';
-  ctx2d.fill();
-  ctx2d.strokeStyle = '#080511';
-  ctx2d.lineWidth = 4;
-  ctx2d.stroke();
-
-  // ── APP NAME ───────────────────────────────────────────────────────────────
-  ctx2d.textAlign = 'center';
-  ctx2d.textBaseline = 'alphabetic';
-  ctx2d.fillStyle = '#ffffff';
-  ctx2d.font = 'bold 90px "Plus Jakarta Sans", sans-serif';
-  ctx2d.fillText('IRONTRACK', W/2, logoY + logoR + 80);
-
-  // PRO badge
-  ctx2d.font = 'bold 32px "Plus Jakarta Sans", sans-serif';
-  const proW = 110, proH = 46, proX = W/2 - proW/2, proY = logoY + logoR + 100;
-  roundRect(proX, proY, proW, proH, 10);
-  ctx2d.fillStyle = 'rgba(168,85,247,0.25)';
-  ctx2d.fill();
-  ctx2d.strokeStyle = 'rgba(168,85,247,0.5)';
-  ctx2d.lineWidth = 2;
-  ctx2d.stroke();
-  ctx2d.fillStyle = '#e879f9';
-  ctx2d.textAlign = 'center';
-  ctx2d.textBaseline = 'middle';
-  ctx2d.fillText('PRO', W/2, proY + proH/2);
-
-  // ── FECHA ─────────────────────────────────────────────────────────────────
-  let curY = proY + proH + 70;
-  ctx2d.fillStyle = '#c084fc';
-  ctx2d.font = '500 40px "Plus Jakarta Sans", sans-serif';
-  ctx2d.textAlign = 'center';
-  ctx2d.textBaseline = 'middle';
-  ctx2d.fillText(dateFormatted.toUpperCase(), W/2, curY);
-
-  // Rutina tag
-  curY += 60;
-  ctx2d.fillStyle = '#a855f7';
-  ctx2d.font = '600 36px "Plus Jakarta Sans", sans-serif';
-  ctx2d.fillText(tagLabel, W/2, curY);
-
-  // ── SEPARADOR ─────────────────────────────────────────────────────────────
-  curY += 60;
-  const sepGrad = ctx2d.createLinearGradient(100, curY, W - 100, curY);
-  sepGrad.addColorStop(0, 'transparent');
-  sepGrad.addColorStop(0.3, 'rgba(168,85,247,0.6)');
-  sepGrad.addColorStop(0.7, 'rgba(217,70,239,0.6)');
-  sepGrad.addColorStop(1, 'transparent');
-  ctx2d.strokeStyle = sepGrad;
-  ctx2d.lineWidth = 2;
-  ctx2d.beginPath();
-  ctx2d.moveTo(100, curY);
-  ctx2d.lineTo(W - 100, curY);
-  ctx2d.stroke();
-
-  // ── STAT CARD HELPER ──────────────────────────────────────────────────────
-  function drawStatCard(x, y, w, h, label, value, unit, color) {
-    // Card background
-    roundRect(x, y, w, h, 32);
-    const cardBg = ctx2d.createLinearGradient(x, y, x + w, y + h);
-    cardBg.addColorStop(0, 'rgba(23,13,38,0.85)');
-    cardBg.addColorStop(1, 'rgba(14,8,26,0.95)');
-    ctx2d.fillStyle = cardBg;
-    ctx2d.fill();
-    ctx2d.strokeStyle = `${color}44`;
-    ctx2d.lineWidth = 2;
-    ctx2d.stroke();
-
-    // Label
-    ctx2d.fillStyle = color;
-    ctx2d.font = '700 32px "Plus Jakarta Sans", sans-serif';
-    ctx2d.textAlign = 'center';
-    ctx2d.textBaseline = 'alphabetic';
-    ctx2d.fillText(label.toUpperCase(), x + w/2, y + 60);
-
-    // Value
-    ctx2d.fillStyle = '#ffffff';
-    ctx2d.font = 'bold 88px "JetBrains Mono", monospace';
-    ctx2d.textBaseline = 'alphabetic';
-    ctx2d.fillText(value, x + w/2, y + 160);
-
-    // Unit
-    if (unit) {
-      ctx2d.fillStyle = `${color}cc`;
-      ctx2d.font = '600 34px "Plus Jakarta Sans", sans-serif';
-      ctx2d.fillText(unit, x + w/2, y + 205);
-    }
-  }
-
-  // ── ESTADÍSTICAS PRINCIPALES (2 tarjetas) ─────────────────────────────────
-  curY += 40;
-  const cardW = (W - 120 - 30) / 2;
-  const cardH = 240;
-
-  drawStatCard(60, curY, cardW, cardH,
-    'Volumen total',
-    totalKg >= 1000 ? (totalKg/1000).toFixed(1) : totalKg.toLocaleString(),
-    totalKg >= 1000 ? 'Toneladas' : 'kg',
-    '#d946ef'
-  );
-  drawStatCard(60 + cardW + 30, curY, cardW, cardH,
-    'Series efectivas',
-    String(totalSeries),
-    'series',
-    '#a855f7'
-  );
-
-  curY += cardH + 30;
-
-  // ── MEJORA ────────────────────────────────────────────────────────────────
-  if (improvementText) {
-    const impColor = improvementValue >= 0 ? '#10b981' : '#f43f5e';
-    roundRect(60, curY, W - 120, 110, 24);
-    ctx2d.fillStyle = improvementValue >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)';
-    ctx2d.fill();
-    ctx2d.strokeStyle = impColor + '55';
-    ctx2d.lineWidth = 2;
-    ctx2d.stroke();
-
-    const arrow = improvementValue >= 0 ? '▲' : '▼';
-    ctx2d.fillStyle = impColor;
-    ctx2d.font = 'bold 56px "JetBrains Mono", monospace';
-    ctx2d.textAlign = 'center';
-    ctx2d.textBaseline = 'middle';
-    ctx2d.fillText(`${arrow} ${improvementText}`, W/2, curY + 55);
-
-    curY += 140;
-  } else {
-    curY += 20;
-  }
-
-  // ── GRÁFICO DE EVOLUCIÓN (renderizado en canvas offline) ──────────────────
-  const chartAreaH = 380;
-  const chartAreaW = W - 120;
-  const chartX = 60;
-  const chartY = curY;
-
-  // Fondo del área del gráfico
-  roundRect(chartX, chartY, chartAreaW, chartAreaH, 32);
-  const chartBg = ctx2d.createLinearGradient(chartX, chartY, chartX + chartAreaW, chartY + chartAreaH);
-  chartBg.addColorStop(0, 'rgba(23,13,38,0.85)');
-  chartBg.addColorStop(1, 'rgba(14,8,26,0.95)');
-  ctx2d.fillStyle = chartBg;
-  ctx2d.fill();
-  ctx2d.strokeStyle = 'rgba(168,85,247,0.2)';
-  ctx2d.lineWidth = 2;
-  ctx2d.stroke();
-
-  ctx2d.fillStyle = '#a855f7';
-  ctx2d.font = '700 30px "Plus Jakarta Sans", sans-serif';
-  ctx2d.textAlign = 'center';
-  ctx2d.textBaseline = 'alphabetic';
-  ctx2d.fillText('EVOLUCIÓN & MEJORA', chartX + chartAreaW/2, chartY + 48);
-
-  // Intentar leer datos del gráfico de mejora global del home
-  const sortedAllW = DB.getWorkouts().sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  // Buscar datos específicos de la rutina del día
-  const primaryTag = tags[0];
-  const tagWorkoutsForChart = sortedAllW.filter(w => (w.tag || 'Entrenamiento General') === primaryTag);
-
-  if (tagWorkoutsForChart.length >= 2) {
-    const basePerf = [100];
-    const chartLabels = [tagWorkoutsForChart[0].date.substring(5)];
-    let lastW = tagWorkoutsForChart[0];
-
-    for (let i = 1; i < tagWorkoutsForChart.length; i++) {
-      const cW = tagWorkoutsForChart[i];
-      chartLabels.push(cW.date.substring(5));
-      const matchImps = [];
-      cW.exercises.forEach(cEx => {
-        const pEx = lastW.exercises.find(e => e.exerciseId === cEx.exerciseId);
+      const imps = [];
+      tw[idx].exercises.forEach(cEx => {
+        const pEx = tw[idx-1].exercises.find(e => e.exerciseId === cEx.exerciseId);
         if (pEx && pEx.sets.length > 0 && cEx.sets.length > 0) {
           const p1 = Math.max(...pEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
           const c1 = Math.max(...cEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
-          if (p1 > 0) matchImps.push((c1 - p1) / p1);
+          if (p1 > 0) imps.push((c1 - p1) / p1);
         }
       });
-      let sf = matchImps.length > 0 ? matchImps.reduce((a,b)=>a+b,0)/matchImps.length : 0;
-      sf = Math.max(-0.25, Math.min(0.25, sf));
-      const prev = basePerf[basePerf.length - 1];
-      basePerf.push(Math.round(prev * (1 + sf) * 10) / 10);
-      lastW = cW;
+      if (imps.length > 0) { improvementValue = Math.round((imps.reduce((a,b)=>a+b,0)/imps.length)*1000)/10; break; }
     }
-
-    // Marcar el punto del día actual
-    const dayIdx = tagWorkoutsForChart.findIndex(w => w.date === dateStr);
-
-    // Dibujar gráfico manualmente
-    const gPadL = 80, gPadR = 40, gPadT = 70, gPadB = 60;
-    const gW = chartAreaW - gPadL - gPadR;
-    const gH = chartAreaH - gPadT - gPadB;
-    const gOriginX = chartX + gPadL;
-    const gOriginY = chartY + gPadT + gH;
-
-    const minVal = Math.min(...basePerf) - 5;
-    const maxVal = Math.max(...basePerf) + 5;
-    const range = maxVal - minVal || 1;
-
-    const toPixX = (i) => gOriginX + (i / (basePerf.length - 1 || 1)) * gW;
-    const toPixY = (v) => gOriginY - ((v - minVal) / range) * gH;
-
-    // Grid lines
-    ctx2d.strokeStyle = 'rgba(74,29,117,0.3)';
-    ctx2d.lineWidth = 1;
-    for (let gi = 0; gi <= 4; gi++) {
-      const gy = gOriginY - (gi / 4) * gH;
-      ctx2d.beginPath(); ctx2d.moveTo(gOriginX, gy); ctx2d.lineTo(gOriginX + gW, gy); ctx2d.stroke();
-      const gv = minVal + (gi / 4) * range;
-      ctx2d.fillStyle = '#7c3aed';
-      ctx2d.font = '24px "JetBrains Mono", monospace';
-      ctx2d.textAlign = 'right';
-      ctx2d.textBaseline = 'middle';
-      ctx2d.fillText(Math.round(gv) + '%', gOriginX - 10, gy);
-    }
-
-    // Fill area
-    const isPos = basePerf[basePerf.length - 1] >= 100;
-    const lineColor = isPos ? '#10b981' : '#f43f5e';
-    const fillColorStart = isPos ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)';
-    const fillColorEnd = isPos ? 'rgba(16,185,129,0.02)' : 'rgba(244,63,94,0.02)';
-
-    const areaFill = ctx2d.createLinearGradient(0, gOriginY - gH, 0, gOriginY);
-    areaFill.addColorStop(0, fillColorStart);
-    areaFill.addColorStop(1, fillColorEnd);
-
-    ctx2d.beginPath();
-    ctx2d.moveTo(toPixX(0), gOriginY);
-    basePerf.forEach((v, i) => ctx2d.lineTo(toPixX(i), toPixY(v)));
-    ctx2d.lineTo(toPixX(basePerf.length - 1), gOriginY);
-    ctx2d.closePath();
-    ctx2d.fillStyle = areaFill;
-    ctx2d.fill();
-
-    // Line
-    ctx2d.beginPath();
-    ctx2d.moveTo(toPixX(0), toPixY(basePerf[0]));
-    for (let i = 1; i < basePerf.length; i++) {
-      ctx2d.lineTo(toPixX(i), toPixY(basePerf[i]));
-    }
-    ctx2d.strokeStyle = lineColor;
-    ctx2d.lineWidth = 5;
-    ctx2d.lineJoin = 'round';
-    ctx2d.stroke();
-
-    // Dots + labels
-    basePerf.forEach((v, i) => {
-      const px = toPixX(i);
-      const py = toPixY(v);
-      const isToday = i === dayIdx;
-
-      if (isToday) {
-        // Pulsing glow ring
-        ctx2d.beginPath();
-        ctx2d.arc(px, py, 20, 0, Math.PI * 2);
-        ctx2d.fillStyle = lineColor + '44';
-        ctx2d.fill();
-      }
-
-      ctx2d.beginPath();
-      ctx2d.arc(px, py, isToday ? 12 : 7, 0, Math.PI * 2);
-      ctx2d.fillStyle = isToday ? '#ffffff' : lineColor;
-      ctx2d.fill();
-      ctx2d.strokeStyle = isToday ? lineColor : '#080511';
-      ctx2d.lineWidth = isToday ? 4 : 2;
-      ctx2d.stroke();
-
-      // X labels
-      ctx2d.fillStyle = isToday ? '#e879f9' : '#7c3aed';
-      ctx2d.font = `${isToday ? 'bold ' : ''}22px "JetBrains Mono", monospace`;
-      ctx2d.textAlign = 'center';
-      ctx2d.textBaseline = 'top';
-      ctx2d.fillText(chartLabels[i], px, gOriginY + 8);
-    });
-
-  } else {
-    // Sin suficientes datos para gráfico
-    ctx2d.fillStyle = '#7c3aed';
-    ctx2d.font = '500 34px "Plus Jakarta Sans", sans-serif';
-    ctx2d.textAlign = 'center';
-    ctx2d.textBaseline = 'middle';
-    ctx2d.fillText('Registra más sesiones para ver la evolución', chartX + chartAreaW/2, chartY + chartAreaH/2);
   }
 
-  curY = chartY + chartAreaH + 50;
+  // ── EVOLUCIÓN ──────────────────────────────────────────────────────────────
+  const primaryTag = tags[0];
+  const tagWks = allSorted.filter(w => (w.tag||'Entrenamiento General') === primaryTag);
+  const basePerf = [100];
+  const chartLabels = tagWks.length ? [tagWks[0].date.substring(5)] : [];
+  let lastChartW = tagWks[0];
+  for (let i = 1; i < tagWks.length; i++) {
+    const cW = tagWks[i];
+    chartLabels.push(cW.date.substring(5));
+    const mi = [];
+    cW.exercises.forEach(cEx => {
+      const pEx = lastChartW.exercises.find(e => e.exerciseId === cEx.exerciseId);
+      if (pEx && pEx.sets.length > 0 && cEx.sets.length > 0) {
+        const p1 = Math.max(...pEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
+        const c1 = Math.max(...cEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
+        if (p1 > 0) mi.push((c1-p1)/p1);
+      }
+    });
+    let sf = mi.length > 0 ? mi.reduce((a,b)=>a+b,0)/mi.length : 0;
+    sf = Math.max(-0.25, Math.min(0.25, sf));
+    basePerf.push(Math.round(basePerf[basePerf.length-1]*(1+sf)*10)/10);
+    lastChartW = cW;
+  }
+  const dayChartIdx = tagWks.findIndex(w => w.date === dateStr);
+  const hasChart = tagWks.length >= 2;
+  const isChartPositive = basePerf[basePerf.length-1] >= 100;
+  const lineColor = isChartPositive ? '#d946ef' : '#f43f5e';
 
-  // ── DINOSAURIO ────────────────────────────────────────────────────────────
-  const dinoCardH = 220;
-  roundRect(60, curY, W - 120, dinoCardH, 32);
-  const dinoBg = ctx2d.createLinearGradient(60, curY, W - 60, curY + dinoCardH);
-  dinoBg.addColorStop(0, 'rgba(30,10,55,0.9)');
-  dinoBg.addColorStop(1, 'rgba(14,8,26,0.95)');
-  ctx2d.fillStyle = dinoBg;
-  ctx2d.fill();
-  ctx2d.strokeStyle = 'rgba(217,70,239,0.3)';
-  ctx2d.lineWidth = 2;
-  ctx2d.stroke();
+  // ── CANVAS ─────────────────────────────────────────────────────────────────
+  // Altura dinámica: cabecera + 2 stats + [mejora] + gráfico + dino + footer
+  const W = 1080;
+  const PAD = 80;    // margen lateral
+  const IW = W - PAD*2; // ancho interior
 
-  // Emoji del dino (grande)
-  ctx2d.font = '90px serif';
-  ctx2d.textAlign = 'left';
-  ctx2d.textBaseline = 'middle';
-  ctx2d.fillText(dino.emoji, 100, curY + dinoCardH/2);
+  // Componentes con altura fija
+  const headerH   = 340;  // logo + nombre + fecha + tag
+  const stat1H    = 260;  // fila de 2 stats
+  const impH      = improvementValue !== null ? 120 : 0;
+  const chartH    = hasChart ? 380 : 0;
+  const dinoH     = 230;
+  const footerH   = 120;
+  const sepH      = 40;
 
-  // Texto del dino
-  ctx2d.fillStyle = '#e879f9';
-  ctx2d.font = '700 30px "Plus Jakarta Sans", sans-serif';
-  ctx2d.textAlign = 'left';
-  ctx2d.textBaseline = 'alphabetic';
-  ctx2d.fillText('HOY PODRÍAS HABER MOVIDO UN...', 240, curY + 72);
+  const H = headerH + sepH + stat1H + impH + (hasChart ? chartH + 40 : 0) + dinoH + footerH + 60;
 
-  ctx2d.fillStyle = '#ffffff';
-  ctx2d.font = 'bold 72px "Plus Jakarta Sans", sans-serif';
-  ctx2d.fillText(dino.name.toUpperCase(), 240, curY + 148);
+  const canvas = document.getElementById('export-canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const c = canvas.getContext('2d');
 
-  ctx2d.fillStyle = '#a855f7';
-  ctx2d.font = '500 32px "Plus Jakarta Sans", sans-serif';
-  ctx2d.fillText(`(${dino.desc})`, 240, curY + 190);
+  // ── FONDO 100% TRANSPARENTE ───────────────────────────────────────────────
+  c.clearRect(0, 0, W, H);
 
-  curY += dinoCardH + 50;
+  // ── HELPERS ────────────────────────────────────────────────────────────────
+  function rr(x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x+r, y); c.lineTo(x+w-r, y); c.quadraticCurveTo(x+w, y, x+w, y+r);
+    c.lineTo(x+w, y+h-r); c.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    c.lineTo(x+r, y+h); c.quadraticCurveTo(x, y+h, x, y+h-r);
+    c.lineTo(x, y+r); c.quadraticCurveTo(x, y, x+r, y);
+    c.closePath();
+  }
 
-  // ── FOOTER ────────────────────────────────────────────────────────────────
-  // Línea decorativa
-  const fSepGrad = ctx2d.createLinearGradient(100, curY, W - 100, curY);
-  fSepGrad.addColorStop(0, 'transparent');
-  fSepGrad.addColorStop(0.3, 'rgba(168,85,247,0.4)');
-  fSepGrad.addColorStop(0.7, 'rgba(217,70,239,0.4)');
-  fSepGrad.addColorStop(1, 'transparent');
-  ctx2d.strokeStyle = fSepGrad;
-  ctx2d.lineWidth = 1.5;
-  ctx2d.beginPath(); ctx2d.moveTo(100, curY); ctx2d.lineTo(W - 100, curY); ctx2d.stroke();
+  function label(text, y, fontSize=38, color='rgba(255,255,255,0.55)', font='Plus Jakarta Sans') {
+    c.fillStyle = color;
+    c.font = `600 ${fontSize}px "${font}", sans-serif`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(text, W/2, y);
+  }
 
-  ctx2d.fillStyle = '#7c3aed';
-  ctx2d.font = '500 32px "Plus Jakarta Sans", sans-serif';
-  ctx2d.textAlign = 'center';
-  ctx2d.textBaseline = 'middle';
-  ctx2d.fillText('IronTrack · Supera tus marcas cada día', W/2, curY + 50);
+  function bigValue(text, y, fontSize=140, color='#ffffff') {
+    c.fillStyle = color;
+    c.font = `800 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(text, W/2, y);
+  }
+
+  function hline(y, alpha=0.18) {
+    c.strokeStyle = `rgba(255,255,255,${alpha})`;
+    c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(PAD, y); c.lineTo(W-PAD, y); c.stroke();
+  }
+
+  // ── HEADER ─────────────────────────────────────────────────────────────────
+  // Icono pesa (SVG dibujado en canvas con colores IronTrack)
+  // Dibujamos una mancuerna simplificada usando rectángulos redondeados
+  let cy = 60;
+
+  // --- DUMBBELL ICON (color fucsia/morado) ---
+  const dbCX = W/2, dbCY = cy + 80;
+  const dbColor1 = '#a855f7', dbColor2 = '#d946ef';
+
+  // Barra central
+  c.fillStyle = dbColor2;
+  rr(dbCX - 110, dbCY - 10, 220, 20, 10);
+  c.fill();
+
+  // Platos izquierda
+  const platGrad1 = c.createLinearGradient(dbCX-180, dbCY-40, dbCX-110, dbCY+40);
+  platGrad1.addColorStop(0, dbColor1); platGrad1.addColorStop(1, dbColor2);
+  c.fillStyle = platGrad1;
+  rr(dbCX-180, dbCY-40, 42, 80, 10); c.fill();
+  rr(dbCX-155, dbCY-50, 36, 100, 10); c.fill();
+
+  // Platos derecha
+  const platGrad2 = c.createLinearGradient(dbCX+110, dbCY-40, dbCX+180, dbCY+40);
+  platGrad2.addColorStop(0, dbColor2); platGrad2.addColorStop(1, dbColor1);
+  c.fillStyle = platGrad2;
+  rr(dbCX+138, dbCY-40, 42, 80, 10); c.fill();
+  rr(dbCX+119, dbCY-50, 36, 100, 10); c.fill();
+
+  // Glow suave alrededor del icono
+  const glowG = c.createRadialGradient(dbCX, dbCY, 10, dbCX, dbCY, 160);
+  glowG.addColorStop(0, 'rgba(217,70,239,0.25)');
+  glowG.addColorStop(1, 'transparent');
+  c.fillStyle = glowG;
+  c.beginPath(); c.arc(dbCX, dbCY, 160, 0, Math.PI*2); c.fill();
+
+  cy = dbCY + 90;
+
+  // IRONTRACK
+  c.fillStyle = '#ffffff';
+  c.font = 'bold 100px "Plus Jakarta Sans", sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('IRONTRACK', W/2, cy);
+  cy += 68;
+
+  // Fecha
+  c.fillStyle = 'rgba(255,255,255,0.65)';
+  c.font = '500 36px "Plus Jakarta Sans", sans-serif';
+  c.fillText(dateFormatted.toUpperCase(), W/2, cy);
+  cy += 50;
+
+  // Tag
+  c.fillStyle = 'rgba(255,255,255,0.4)';
+  c.font = '500 32px "Plus Jakarta Sans", sans-serif';
+  c.fillText(tagLabel.toUpperCase(), W/2, cy);
+  cy += 50;
+
+  hline(cy); cy += 50;
+
+  // ── STATS STRAVA-STYLE ─────────────────────────────────────────────────────
+  // Dos bloques centrados con label pequeño arriba y valor gigante abajo
+  // (igual que Strava: "Distance", "6.09 km")
+  function drawStatBlock(x, y, w, lbl, val, unit) {
+    c.fillStyle = 'rgba(255,255,255,0.45)';
+    c.font = '600 34px "Plus Jakarta Sans", sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(lbl, x + w/2, y);
+
+    // Valor en blanco grande
+    const displayVal = unit ? `${val} ${unit}` : val;
+    c.fillStyle = '#ffffff';
+    c.font = 'bold 110px "Plus Jakarta Sans", sans-serif';
+    c.textBaseline = 'middle';
+    c.fillText(val, x + w/2, y + 80);
+
+    if (unit) {
+      c.fillStyle = 'rgba(255,255,255,0.5)';
+      c.font = '600 38px "Plus Jakarta Sans", sans-serif';
+      c.fillText(unit, x + w/2, y + 148);
+    }
+  }
+
+  const halfW = (W - PAD*2 - 40) / 2;
+  drawStatBlock(PAD, cy, halfW,
+    'Volumen total',
+    totalKg >= 1000 ? (totalKg/1000).toFixed(1) : totalKg.toLocaleString('es'),
+    totalKg >= 1000 ? 'T' : 'kg'
+  );
+  drawStatBlock(PAD + halfW + 40, cy, halfW,
+    'Series efectivas',
+    String(totalSeries),
+    'series'
+  );
+  cy += stat1H;
+
+  // ── MEJORA ─────────────────────────────────────────────────────────────────
+  if (improvementValue !== null) {
+    hline(cy - 10, 0.1); cy += 20;
+    const impColor = improvementValue >= 0 ? '#10b981' : '#f43f5e';
+    const arrow = improvementValue >= 0 ? '▲' : '▼';
+    c.fillStyle = impColor;
+    c.font = 'bold 72px "Plus Jakarta Sans", sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(`${arrow} ${improvementValue >= 0 ? '+' : ''}${improvementValue}%`, W/2, cy + 50);
+    c.fillStyle = 'rgba(255,255,255,0.4)';
+    c.font = '500 34px "Plus Jakarta Sans", sans-serif';
+    c.fillText('vs sesión anterior', W/2, cy + 108);
+    cy += impH + 20;
+  }
+
+  // ── GRÁFICO DE EVOLUCIÓN (línea Strava-style, solo la curva en color) ──────
+  if (hasChart) {
+    hline(cy, 0.1); cy += 30;
+    c.fillStyle = 'rgba(255,255,255,0.35)';
+    c.font = '600 30px "Plus Jakarta Sans", sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('EVOLUCIÓN — ' + tagLabel.toUpperCase(), W/2, cy + 20);
+    cy += 50;
+
+    const gPadL = 70, gPadR = 30, gPadT = 20, gPadB = 50;
+    const gW = IW - gPadL - gPadR;
+    const gH = chartH - gPadT - gPadB - 50;
+    const gOX = PAD + gPadL;
+    const gOY = cy + gPadT + gH;
+
+    const minV = Math.min(...basePerf) - 3;
+    const maxV = Math.max(...basePerf) + 3;
+    const rng = maxV - minV || 1;
+    const tX = i => gOX + (i/(basePerf.length-1||1))*gW;
+    const tY = v => gOY - ((v-minV)/rng)*gH;
+
+    // Área rellena con color de línea + transparencia
+    const areaG = c.createLinearGradient(0, gOY-gH, 0, gOY);
+    areaG.addColorStop(0, lineColor + '50');
+    areaG.addColorStop(1, lineColor + '05');
+    c.beginPath();
+    c.moveTo(tX(0), gOY);
+    basePerf.forEach((v,i) => c.lineTo(tX(i), tY(v)));
+    c.lineTo(tX(basePerf.length-1), gOY);
+    c.closePath();
+    c.fillStyle = areaG;
+    c.fill();
+
+    // Línea principal (como Strava, gruesa y en color fucsia)
+    c.beginPath();
+    c.moveTo(tX(0), tY(basePerf[0]));
+    for (let i = 1; i < basePerf.length; i++) c.lineTo(tX(i), tY(basePerf[i]));
+    c.strokeStyle = lineColor;
+    c.lineWidth = 7;
+    c.lineJoin = 'round';
+    c.lineCap = 'round';
+    c.stroke();
+
+    // Puntos
+    basePerf.forEach((v, i) => {
+      const px = tX(i), py = tY(v);
+      const isToday = i === dayChartIdx;
+
+      if (isToday) {
+        c.beginPath(); c.arc(px, py, 22, 0, Math.PI*2);
+        c.fillStyle = lineColor + '33'; c.fill();
+      }
+      c.beginPath(); c.arc(px, py, isToday ? 13 : 7, 0, Math.PI*2);
+      c.fillStyle = isToday ? '#ffffff' : lineColor;
+      c.fill();
+      if (isToday) {
+        c.strokeStyle = lineColor; c.lineWidth = 4;
+        c.beginPath(); c.arc(px, py, 13, 0, Math.PI*2); c.stroke();
+      }
+
+      // Label X
+      c.fillStyle = isToday ? '#ffffff' : 'rgba(255,255,255,0.35)';
+      c.font = `${isToday ? 'bold ' : ''}24px "Plus Jakarta Sans", sans-serif`;
+      c.textAlign = 'center'; c.textBaseline = 'top';
+      c.fillText(chartLabels[i], px, gOY + 8);
+    });
+
+    cy += gH + gPadT + gPadB + 10;
+  }
+
+  // ── DINO ───────────────────────────────────────────────────────────────────
+  hline(cy, 0.1); cy += 40;
+
+  c.fillStyle = 'rgba(255,255,255,0.4)';
+  c.font = '600 32px "Plus Jakarta Sans", sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('HOY PODRÍAS HABER MOVIDO UN...', W/2, cy + 25);
+
+  // Emoji grande centrado
+  c.font = '100px serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(dino.emoji, W/2 - 180, cy + 115);
+
+  c.fillStyle = '#ffffff';
+  c.font = 'bold 90px "Plus Jakarta Sans", sans-serif';
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText(dino.name.toUpperCase(), W/2 - 100, cy + 100);
+
+  c.fillStyle = 'rgba(255,255,255,0.4)';
+  c.font = '500 34px "Plus Jakarta Sans", sans-serif';
+  c.fillText(dino.desc, W/2 - 100, cy + 160);
+  cy += dinoH;
+
+  // ── FOOTER ─────────────────────────────────────────────────────────────────
+  hline(cy, 0.12); cy += 50;
+  c.fillStyle = 'rgba(255,255,255,0.3)';
+  c.font = '600 34px "Plus Jakarta Sans", sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('IronTrack · Supera tus marcas cada día', W/2, cy + 20);
 
   // ── DESCARGAR ─────────────────────────────────────────────────────────────
-  const link = document.createElement('a');
-  link.download = `irontrack-${dateStr}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-  showToast('Tarjeta exportada ✓');
+  setTimeout(() => {
+    const link = document.createElement('a');
+    link.download = `irontrack-${dateStr}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('Tarjeta exportada ✓');
+  }, 50);
 }
