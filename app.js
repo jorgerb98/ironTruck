@@ -488,6 +488,7 @@ function loadRoutineIntoSession(routine) {
     };
   });
 
+  openExerciseIndices.clear(); // Empiezan contraídos para ver la rutina limpia
   autosaveSession();
   renderSessionExercises();
   showToast(`Rutina "${routine.name}" cargada con 1 repetición base.`);
@@ -821,6 +822,8 @@ function goToWorkoutForDate(dateStr) {
 // -------------------------------------------------------------
 // GESTIÓN DE SESIÓN DE ENTRENAMIENTO ACTIVA (CON RIR Y REPS EDITABLES)
 // -------------------------------------------------------------
+const openExerciseIndices = new Set();
+
 function addExerciseToSession(exerciseId) {
   const allExercises = DB.getExercises();
   const exercise = allExercises.find(e => e.id === exerciseId);
@@ -842,6 +845,7 @@ function addExerciseToSession(exerciseId) {
   };
 
   currentSession.exercises.push(newExerciseEntry);
+  openExerciseIndices.add(currentSession.exercises.length - 1);
   autosaveSession();
   renderSessionExercises();
   showToast(`Añadido: ${exercise.name}`);
@@ -856,6 +860,36 @@ function findLastPerformance(exerciseId) {
     }
   }
   return null;
+}
+
+function toggleExerciseCollapse(exIndex) {
+  const panel = document.getElementById(`ex-collapse-${exIndex}`);
+  const chevron = document.getElementById(`ex-chevron-${exIndex}`);
+  if (!panel) return;
+
+  const isHidden = panel.classList.toggle('hidden');
+  if (isHidden) {
+    openExerciseIndices.delete(exIndex);
+    if (chevron) chevron.style.transform = '';
+  } else {
+    openExerciseIndices.add(exIndex);
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+  }
+}
+
+function updateSetDataLive(exIndex, setIndex, field, value) {
+  if (currentSession.exercises[exIndex] && currentSession.exercises[exIndex].sets[setIndex]) {
+    currentSession.exercises[exIndex].sets[setIndex][field] = parseFloat(value) || 0;
+    autosaveSession();
+
+    // Actualizar en vivo el volumen de este ejercicio en la cabecera
+    const ex = currentSession.exercises[exIndex];
+    const exVol = ex.sets.reduce((sum, s) => sum + ((parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0)), 0);
+    const volBadge = document.getElementById(`ex-vol-${exIndex}`);
+    if (volBadge) {
+      volBadge.innerText = exVol > 0 ? `${exVol} kg` : '';
+    }
+  }
 }
 
 function renderSessionExercises() {
@@ -895,13 +929,14 @@ function renderSessionExercises() {
 
     const setsCount = item.sets.length;
     const collapseId = `ex-collapse-${exIndex}`;
+    const isOpen = openExerciseIndices.has(exIndex);
 
     return `
       <div class="bg-[#110a1f] border border-[#2a1645] rounded-2xl shadow-lg overflow-hidden">
-        <!-- CABECERA COLAPSABLE -->
-        <button onclick="toggleExerciseCollapse('${collapseId}', this)"
-          class="w-full flex items-center justify-between p-4 text-left active:bg-[#180e2a] transition">
-          <div class="flex items-center space-x-2 min-w-0">
+        <!-- CABECERA COLAPSABLE: div interactivo que no rompe botones internos -->
+        <div onclick="toggleExerciseCollapse(${exIndex})"
+          class="w-full flex items-center justify-between p-4 cursor-pointer select-none active:bg-[#180e2a] transition">
+          <div class="flex items-center space-x-2.5 min-w-0 pr-2">
             <div class="flex-shrink-0">${muscleIcon}</div>
             <div class="min-w-0">
               <div class="flex items-center space-x-2 flex-wrap gap-y-0.5">
@@ -911,18 +946,18 @@ function renderSessionExercises() {
               <h3 class="text-sm font-bold text-white leading-tight truncate">${item.exerciseName}</h3>
             </div>
           </div>
-          <div class="flex items-center space-x-2.5 flex-shrink-0 ml-2">
-            <span class="text-[11px] font-semibold text-fuchsia-400 mono">${exerciseVolume > 0 ? exerciseVolume + ' kg' : ''}</span>
+          <div class="flex items-center space-x-2 flex-shrink-0">
+            <span id="ex-vol-${exIndex}" class="text-[11px] font-semibold text-fuchsia-400 mono">${exerciseVolume > 0 ? exerciseVolume + ' kg' : ''}</span>
             <span class="text-[11px] text-purple-400 font-semibold">${setsCount} ${setsCount === 1 ? 'serie' : 'series'}</span>
-            <i data-lucide="chevron-down" class="w-4 h-4 text-purple-400 transition-transform duration-200 ex-chevron"></i>
-            <button onclick="event.stopPropagation(); removeExerciseFromSession(${exIndex})" class="p-1 text-purple-400/50 hover:text-rose-400 transition" title="Eliminar ejercicio">
+            <i id="ex-chevron-${exIndex}" data-lucide="chevron-down" class="w-4 h-4 text-purple-400 transition-transform duration-200" ${isOpen ? 'style="transform: rotate(180deg);"' : ''}></i>
+            <button type="button" onclick="event.stopPropagation(); removeExerciseFromSession(${exIndex})" class="p-1.5 text-purple-400/50 hover:text-rose-400 transition ml-1" title="Eliminar ejercicio">
               <i data-lucide="trash-2" class="w-4 h-4"></i>
             </button>
           </div>
-        </button>
+        </div>
 
         <!-- CONTENIDO DESPLEGABLE -->
-        <div id="${collapseId}" class="hidden px-4 pb-4 space-y-3 border-t border-[#2a1645]">
+        <div id="${collapseId}" class="${isOpen ? '' : 'hidden'} px-4 pb-4 space-y-3 border-t border-[#2a1645]">
           <div class="pt-3 space-y-2">
             <!-- Cabecera tabla -->
             <div class="grid grid-cols-12 gap-1 text-[10px] font-semibold text-purple-300/60 uppercase tracking-wider text-center px-1">
@@ -939,25 +974,25 @@ function renderSessionExercises() {
                   <div class="col-span-2 text-center text-xs font-bold text-purple-400">#${setIndex + 1}</div>
                   <div class="col-span-4">
                     <input type="number" step="0.5" value="${set.weight}" placeholder="0"
-                      onchange="updateSetData(${exIndex}, ${setIndex}, 'weight', this.value)"
+                      oninput="updateSetDataLive(${exIndex}, ${setIndex}, 'weight', this.value)"
                       class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1.5 text-center text-xs text-white font-semibold focus:outline-none focus:border-purple-500">
                   </div>
                   <div class="col-span-3">
                     <input type="number" min="1" value="${set.reps || 1}" placeholder="1"
-                      onchange="updateSetData(${exIndex}, ${setIndex}, 'reps', this.value)"
+                      oninput="updateSetDataLive(${exIndex}, ${setIndex}, 'reps', this.value)"
                       class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1.5 text-center text-xs text-white font-semibold focus:outline-none focus:border-purple-500">
                   </div>
                   <div class="col-span-2">
                     <input type="number" step="1" max="6" min="0" value="${set.rir !== undefined ? set.rir : 2}"
-                      onchange="updateSetData(${exIndex}, ${setIndex}, 'rir', this.value)"
+                      oninput="updateSetDataLive(${exIndex}, ${setIndex}, 'rir', this.value)"
                       class="w-full bg-[#0d071a] border border-[#37195c] rounded-lg py-1 px-1 text-center text-[11px] text-purple-200 focus:outline-none focus:border-purple-500" placeholder="2" title="RIR">
                   </div>
                   <div class="col-span-1 text-center flex flex-col items-center gap-0.5">
                     ${setIndex < item.sets.length - 1 ? `
-                    <button onclick="copySetToNext(${exIndex}, ${setIndex})" class="text-fuchsia-400/70 hover:text-fuchsia-300 p-0.5" title="Copiar a siguiente">
+                    <button type="button" onclick="copySetToNext(${exIndex}, ${setIndex})" class="text-fuchsia-400/70 hover:text-fuchsia-300 p-0.5" title="Copiar a siguiente">
                       <i data-lucide="copy" class="w-3 h-3"></i>
                     </button>` : `<div class="w-3 h-3"></div>`}
-                    <button onclick="removeSet(${exIndex}, ${setIndex})" class="text-purple-400/50 hover:text-rose-400 p-0.5">
+                    <button type="button" onclick="removeSet(${exIndex}, ${setIndex})" class="text-purple-400/50 hover:text-rose-400 p-0.5">
                       <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
                     </button>
                   </div>
@@ -966,7 +1001,7 @@ function renderSessionExercises() {
             </div>
           </div>
 
-          <button onclick="addSetToExercise(${exIndex})" class="w-full py-1.5 rounded-lg bg-[#180e2a] hover:bg-[#23133d] text-purple-300 text-xs font-semibold flex items-center justify-center space-x-1 border border-[#37195c] transition">
+          <button type="button" onclick="addSetToExercise(${exIndex})" class="w-full py-1.5 rounded-lg bg-[#180e2a] hover:bg-[#23133d] text-purple-300 text-xs font-semibold flex items-center justify-center space-x-1 border border-[#37195c] transition">
             <i data-lucide="plus" class="w-3.5 h-3.5 text-fuchsia-400"></i>
             <span>Añadir Serie</span>
           </button>
@@ -983,20 +1018,8 @@ function renderSessionExercises() {
   lucide.createIcons();
 }
 
-function toggleExerciseCollapse(collapseId, btn) {
-  const panel = document.getElementById(collapseId);
-  if (!panel) return;
-  const chevron = btn.querySelector('.ex-chevron');
-  const isHidden = panel.classList.contains('hidden');
-  panel.classList.toggle('hidden', !isHidden);
-  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
-}
-
 function updateSetData(exIndex, setIndex, field, value) {
-  if (currentSession.exercises[exIndex] && currentSession.exercises[exIndex].sets[setIndex]) {
-    currentSession.exercises[exIndex].sets[setIndex][field] = parseFloat(value) || 0;
-    autosaveSession();
-  }
+  updateSetDataLive(exIndex, setIndex, field, value);
 }
 
 function addSetToExercise(exIndex) {
@@ -1005,6 +1028,7 @@ function addSetToExercise(exIndex) {
   const lastSet = ex.sets[ex.sets.length - 1];
   const newSet = lastSet ? { ...lastSet, reps: 1 } : { weight: 0, reps: 1, rir: 2 };
   ex.sets.push(newSet);
+  openExerciseIndices.add(exIndex); // Mantener abierto
   autosaveSession();
   renderSessionExercises();
   startRestTimer(90);
@@ -1015,6 +1039,7 @@ function removeSet(exIndex, setIndex) {
   if (!ex) return;
   if (ex.sets.length > 1) {
     ex.sets.splice(setIndex, 1);
+    openExerciseIndices.add(exIndex); // Mantener abierto
   } else {
     removeExerciseFromSession(exIndex);
     return;
@@ -1032,6 +1057,7 @@ function copySetToNext(exIndex, setIndex) {
   dst.weight = src.weight;
   dst.reps   = src.reps;
   dst.rir    = src.rir;
+  openExerciseIndices.add(exIndex); // Mantener abierto
   autosaveSession();
   renderSessionExercises();
   showToast('Serie copiada ✓');
@@ -1039,6 +1065,16 @@ function copySetToNext(exIndex, setIndex) {
 
 function removeExerciseFromSession(exIndex) {
   currentSession.exercises.splice(exIndex, 1);
+  openExerciseIndices.delete(exIndex);
+  // Re-mapear los índices abiertos si cambiaron de posición
+  const newOpen = new Set();
+  openExerciseIndices.forEach(idx => {
+    if (idx < exIndex) newOpen.add(idx);
+    else if (idx > exIndex) newOpen.add(idx - 1);
+  });
+  openExerciseIndices.clear();
+  newOpen.forEach(idx => openExerciseIndices.add(idx));
+
   autosaveSession();
   renderSessionExercises();
 }
@@ -2208,7 +2244,7 @@ function getDinoForKg(totalKg) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXPORTAR TARJETA DEL DÍA COMO PNG — Estilo Strava, fondo transparente
+// EXPORTAR TARJETA DEL DÍA COMO PNG — Estilo Strava / Story, fondo transparente
 // ─────────────────────────────────────────────────────────────────────────────
 async function exportDayCardToPNG(dateStr) {
   const workouts = DB.getWorkouts().filter(w => w.date === dateStr);
@@ -2221,10 +2257,7 @@ async function exportDayCardToPNG(dateStr) {
   const totalSeries = workouts.reduce((sum, w) =>
     sum + w.exercises.reduce((s, ex) => s + (ex.sets ? ex.sets.length : 0), 0), 0);
   const tags = [...new Set(workouts.map(w => w.tag || 'Entrenamiento General'))];
-  const tagLabel = tags.join(' · ');
   const dino = getDinoForKg(totalKg);
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   // ── MEJORA ─────────────────────────────────────────────────────────────────
   const allSorted = DB.getWorkouts().sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -2246,7 +2279,7 @@ async function exportDayCardToPNG(dateStr) {
     }
   }
 
-  // ── EVOLUCIÓN ──────────────────────────────────────────────────────────────
+  // ── EVOLUCIÓN (Línea estilo Strava) ─────────────────────────────────────────
   const primaryTag = tags[0];
   const tagWks = allSorted.filter(w => (w.tag||'Entrenamiento General') === primaryTag);
   const basePerf = [100];
@@ -2274,32 +2307,18 @@ async function exportDayCardToPNG(dateStr) {
   const isChartPositive = basePerf[basePerf.length-1] >= 100;
   const lineColor = isChartPositive ? '#d946ef' : '#f43f5e';
 
-  // ── CANVAS ─────────────────────────────────────────────────────────────────
-  // Altura dinámica: cabecera + 2 stats + [mejora] + gráfico + dino + footer
+  // ── CANVAS 1080x1920 (Formato Stories 9:16) ────────────────────────────────
   const W = 1080;
-  const PAD = 80;    // margen lateral
-  const IW = W - PAD*2; // ancho interior
-
-  // Componentes con altura fija
-  const headerH   = 340;  // logo + nombre + fecha + tag
-  const stat1H    = 260;  // fila de 2 stats
-  const impH      = improvementValue !== null ? 120 : 0;
-  const chartH    = hasChart ? 380 : 0;
-  const dinoH     = 230;
-  const footerH   = 120;
-  const sepH      = 40;
-
-  const H = headerH + sepH + stat1H + impH + (hasChart ? chartH + 40 : 0) + dinoH + footerH + 60;
-
+  const H = 1920;
   const canvas = document.getElementById('export-canvas');
   canvas.width = W;
   canvas.height = H;
   const c = canvas.getContext('2d');
 
-  // ── FONDO 100% TRANSPARENTE ───────────────────────────────────────────────
+  // FONDO 100% TRANSPARENTE
   c.clearRect(0, 0, W, H);
 
-  // ── HELPERS ────────────────────────────────────────────────────────────────
+  // Helper para rectángulos redondeados
   function rr(x, y, w, h, r) {
     c.beginPath();
     c.moveTo(x+r, y); c.lineTo(x+w-r, y); c.quadraticCurveTo(x+w, y, x+w, y+r);
@@ -2309,151 +2328,113 @@ async function exportDayCardToPNG(dateStr) {
     c.closePath();
   }
 
-  function label(text, y, fontSize=38, color='rgba(255,255,255,0.55)', font='Plus Jakarta Sans') {
-    c.fillStyle = color;
-    c.font = `600 ${fontSize}px "${font}", sans-serif`;
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.fillText(text, W/2, y);
-  }
+  // Centrado vertical dinámico con margen generoso arriba y abajo
+  let cy = 160;
 
-  function bigValue(text, y, fontSize=140, color='#ffffff') {
-    c.fillStyle = color;
-    c.font = `800 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.fillText(text, W/2, y);
-  }
+  // ── 1. HEADER: IRONTRACK ──────────────────────────────────────────────────
+  c.fillStyle = '#ffffff';
+  c.font = 'bold 84px "Plus Jakarta Sans", sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.letterSpacing = '2px';
+  c.fillText('IRONTRACK', W/2, cy);
+  cy += 95;
 
-  function hline(y, alpha=0.18) {
-    c.strokeStyle = `rgba(255,255,255,${alpha})`;
-    c.lineWidth = 1.5;
-    c.beginPath(); c.moveTo(PAD, y); c.lineTo(W-PAD, y); c.stroke();
-  }
+  // ── 2. ICONO DE LA MANCUERNA NEÓN (Fiel a la foto de referencia) ─────────
+  const dbCX = W/2, dbCY = cy + 50;
 
-  // ── HEADER ─────────────────────────────────────────────────────────────────
-  // Icono pesa (SVG dibujado en canvas con colores IronTrack)
-  // Dibujamos una mancuerna simplificada usando rectángulos redondeados
-  let cy = 60;
-
-  // --- DUMBBELL ICON (color fucsia/morado) ---
-  const dbCX = W/2, dbCY = cy + 80;
-  const dbColor1 = '#a855f7', dbColor2 = '#d946ef';
-
-  // Barra central
-  c.fillStyle = dbColor2;
-  rr(dbCX - 110, dbCY - 10, 220, 20, 10);
-  c.fill();
-
-  // Platos izquierda
-  const platGrad1 = c.createLinearGradient(dbCX-180, dbCY-40, dbCX-110, dbCY+40);
-  platGrad1.addColorStop(0, dbColor1); platGrad1.addColorStop(1, dbColor2);
-  c.fillStyle = platGrad1;
-  rr(dbCX-180, dbCY-40, 42, 80, 10); c.fill();
-  rr(dbCX-155, dbCY-50, 36, 100, 10); c.fill();
-
-  // Platos derecha
-  const platGrad2 = c.createLinearGradient(dbCX+110, dbCY-40, dbCX+180, dbCY+40);
-  platGrad2.addColorStop(0, dbColor2); platGrad2.addColorStop(1, dbColor1);
-  c.fillStyle = platGrad2;
-  rr(dbCX+138, dbCY-40, 42, 80, 10); c.fill();
-  rr(dbCX+119, dbCY-50, 36, 100, 10); c.fill();
-
-  // Glow suave alrededor del icono
-  const glowG = c.createRadialGradient(dbCX, dbCY, 10, dbCX, dbCY, 160);
-  glowG.addColorStop(0, 'rgba(217,70,239,0.25)');
+  // Resplandor exterior (glow) fucsia/morado suave
+  const glowG = c.createRadialGradient(dbCX, dbCY, 20, dbCX, dbCY, 180);
+  glowG.addColorStop(0, 'rgba(217,70,239,0.35)');
+  glowG.addColorStop(0.5, 'rgba(168,85,247,0.18)');
   glowG.addColorStop(1, 'transparent');
   c.fillStyle = glowG;
-  c.beginPath(); c.arc(dbCX, dbCY, 160, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(dbCX, dbCY, 180, 0, Math.PI*2); c.fill();
 
-  cy = dbCY + 90;
+  // Barra central
+  const barGrad = c.createLinearGradient(dbCX - 90, dbCY, dbCX + 90, dbCY);
+  barGrad.addColorStop(0, '#c084fc');
+  barGrad.addColorStop(0.5, '#ec4899');
+  barGrad.addColorStop(1, '#c084fc');
+  c.fillStyle = barGrad;
+  rr(dbCX - 90, dbCY - 8, 180, 16, 8);
+  c.fill();
 
-  // IRONTRACK
-  c.fillStyle = '#ffffff';
-  c.font = 'bold 100px "Plus Jakarta Sans", sans-serif';
-  c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('IRONTRACK', W/2, cy);
-  cy += 68;
+  // Platos interiores (más grandes)
+  const plateInL = c.createLinearGradient(dbCX - 120, dbCY - 44, dbCX - 85, dbCY + 44);
+  plateInL.addColorStop(0, '#a855f7'); plateInL.addColorStop(1, '#ec4899');
+  c.fillStyle = plateInL;
+  rr(dbCX - 122, dbCY - 46, 32, 92, 14); c.fill();
+  c.strokeStyle = '#f472b6'; c.lineWidth = 2.5; c.stroke();
 
-  // Fecha
+  const plateInR = c.createLinearGradient(dbCX + 90, dbCY - 44, dbCX + 125, dbCY + 44);
+  plateInR.addColorStop(0, '#ec4899'); plateInR.addColorStop(1, '#a855f7');
+  c.fillStyle = plateInR;
+  rr(dbCX + 90, dbCY - 46, 32, 92, 14); c.fill();
+  c.strokeStyle = '#f472b6'; c.lineWidth = 2.5; c.stroke();
+
+  // Platos exteriores (menores)
+  const plateOutL = c.createLinearGradient(dbCX - 150, dbCY - 34, dbCX - 122, dbCY + 34);
+  plateOutL.addColorStop(0, '#9333ea'); plateOutL.addColorStop(1, '#db2777');
+  c.fillStyle = plateOutL;
+  rr(dbCX - 146, dbCY - 36, 22, 72, 11); c.fill();
+  c.strokeStyle = '#e879f9'; c.lineWidth = 2; c.stroke();
+
+  const plateOutR = c.createLinearGradient(dbCX + 124, dbCY - 34, dbCX + 152, dbCY + 34);
+  plateOutR.addColorStop(0, '#db2777'); plateOutR.addColorStop(1, '#9333ea');
+  c.fillStyle = plateOutR;
+  rr(dbCX + 124, dbCY - 36, 22, 72, 11); c.fill();
+  c.strokeStyle = '#e879f9'; c.lineWidth = 2; c.stroke();
+
+  cy = dbCY + 130;
+
+  // ── 3. MÉTRICA: VOLUMEN TOTAL ─────────────────────────────────────────────
   c.fillStyle = 'rgba(255,255,255,0.65)';
-  c.font = '500 36px "Plus Jakarta Sans", sans-serif';
-  c.fillText(dateFormatted.toUpperCase(), W/2, cy);
-  cy += 50;
+  c.font = '600 32px "Plus Jakarta Sans", sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText('Volumen total', W/2, cy);
+  cy += 58;
 
-  // Tag
-  c.fillStyle = 'rgba(255,255,255,0.4)';
-  c.font = '500 32px "Plus Jakarta Sans", sans-serif';
-  c.fillText(tagLabel.toUpperCase(), W/2, cy);
-  cy += 50;
+  // Valor: si >= 1000 kg muestra ej: "16.8 Toneladas"
+  c.fillStyle = '#ffffff';
+  c.font = 'bold 84px "Plus Jakarta Sans", sans-serif';
+  const volString = totalKg >= 1000 ? `${(totalKg/1000).toFixed(1)} Toneladas` : `${totalKg.toLocaleString('es')} kg`;
+  c.fillText(volString, W/2, cy);
+  cy += 95;
 
-  hline(cy); cy += 50;
+  // ── 4. MÉTRICA: SERIES EFECTIVAS ──────────────────────────────────────────
+  c.fillStyle = 'rgba(255,255,255,0.65)';
+  c.font = '600 32px "Plus Jakarta Sans", sans-serif';
+  c.fillText('Series efectivas', W/2, cy);
+  cy += 58;
 
-  // ── STATS STRAVA-STYLE ─────────────────────────────────────────────────────
-  // Dos bloques centrados con label pequeño arriba y valor gigante abajo
-  // (igual que Strava: "Distance", "6.09 km")
-  function drawStatBlock(x, y, w, lbl, val, unit) {
-    c.fillStyle = 'rgba(255,255,255,0.45)';
-    c.font = '600 34px "Plus Jakarta Sans", sans-serif';
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText(lbl, x + w/2, y);
+  c.fillStyle = '#ffffff';
+  c.font = 'bold 84px "Plus Jakarta Sans", sans-serif';
+  c.fillText(`${totalSeries} series`, W/2, cy);
+  cy += 95;
 
-    // Valor en blanco grande
-    const displayVal = unit ? `${val} ${unit}` : val;
-    c.fillStyle = '#ffffff';
-    c.font = 'bold 110px "Plus Jakarta Sans", sans-serif';
-    c.textBaseline = 'middle';
-    c.fillText(val, x + w/2, y + 80);
-
-    if (unit) {
-      c.fillStyle = 'rgba(255,255,255,0.5)';
-      c.font = '600 38px "Plus Jakarta Sans", sans-serif';
-      c.fillText(unit, x + w/2, y + 148);
-    }
-  }
-
-  const halfW = (W - PAD*2 - 40) / 2;
-  drawStatBlock(PAD, cy, halfW,
-    'Volumen total',
-    totalKg >= 1000 ? (totalKg/1000).toFixed(1) : totalKg.toLocaleString('es'),
-    totalKg >= 1000 ? 'T' : 'kg'
-  );
-  drawStatBlock(PAD + halfW + 40, cy, halfW,
-    'Series efectivas',
-    String(totalSeries),
-    'series'
-  );
-  cy += stat1H;
-
-  // ── MEJORA ─────────────────────────────────────────────────────────────────
+  // ── 5. MEJORA PORCENTUAL (Si la hay) ──────────────────────────────────────
   if (improvementValue !== null) {
-    hline(cy - 10, 0.1); cy += 20;
     const impColor = improvementValue >= 0 ? '#10b981' : '#f43f5e';
     const arrow = improvementValue >= 0 ? '▲' : '▼';
     c.fillStyle = impColor;
-    c.font = 'bold 72px "Plus Jakarta Sans", sans-serif';
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText(`${arrow} ${improvementValue >= 0 ? '+' : ''}${improvementValue}%`, W/2, cy + 50);
-    c.fillStyle = 'rgba(255,255,255,0.4)';
-    c.font = '500 34px "Plus Jakarta Sans", sans-serif';
-    c.fillText('vs sesión anterior', W/2, cy + 108);
-    cy += impH + 20;
+    c.font = 'bold 56px "Plus Jakarta Sans", sans-serif';
+    c.fillText(`${arrow} ${improvementValue >= 0 ? '+' : ''}${improvementValue}%`, W/2, cy);
+    cy += 40;
+
+    c.fillStyle = 'rgba(255,255,255,0.5)';
+    c.font = '500 28px "Plus Jakarta Sans", sans-serif';
+    c.fillText('vs sesión anterior', W/2, cy);
+    cy += 75;
   }
 
-  // ── GRÁFICO DE EVOLUCIÓN (línea Strava-style, solo la curva en color) ──────
+  // ── 6. GRÁFICO DE EVOLUCIÓN (Línea Strava pura sin títulos redundantes) ───
   if (hasChart) {
-    hline(cy, 0.1); cy += 30;
-    c.fillStyle = 'rgba(255,255,255,0.35)';
-    c.font = '600 30px "Plus Jakarta Sans", sans-serif';
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText('EVOLUCIÓN — ' + tagLabel.toUpperCase(), W/2, cy + 20);
-    cy += 50;
-
-    const gPadL = 70, gPadR = 30, gPadT = 20, gPadB = 50;
-    const gW = IW - gPadL - gPadR;
-    const gH = chartH - gPadT - gPadB - 50;
-    const gOX = PAD + gPadL;
-    const gOY = cy + gPadT + gH;
+    const gW = 680;
+    const gH = 200;
+    const gOX = (W - gW) / 2;
+    const gOY = cy + gH;
 
     const minV = Math.min(...basePerf) - 3;
     const maxV = Math.max(...basePerf) + 3;
@@ -2461,24 +2442,24 @@ async function exportDayCardToPNG(dateStr) {
     const tX = i => gOX + (i/(basePerf.length-1||1))*gW;
     const tY = v => gOY - ((v-minV)/rng)*gH;
 
-    // Área rellena con color de línea + transparencia
-    const areaG = c.createLinearGradient(0, gOY-gH, 0, gOY);
-    areaG.addColorStop(0, lineColor + '50');
-    areaG.addColorStop(1, lineColor + '05');
+    // Relleno suave bajo la curva
+    const areaG = c.createLinearGradient(0, gOY - gH, 0, gOY);
+    areaG.addColorStop(0, lineColor + '45');
+    areaG.addColorStop(1, lineColor + '02');
     c.beginPath();
     c.moveTo(tX(0), gOY);
-    basePerf.forEach((v,i) => c.lineTo(tX(i), tY(v)));
-    c.lineTo(tX(basePerf.length-1), gOY);
+    basePerf.forEach((v, i) => c.lineTo(tX(i), tY(v)));
+    c.lineTo(tX(basePerf.length - 1), gOY);
     c.closePath();
     c.fillStyle = areaG;
     c.fill();
 
-    // Línea principal (como Strava, gruesa y en color fucsia)
+    // Línea continua brillante
     c.beginPath();
     c.moveTo(tX(0), tY(basePerf[0]));
     for (let i = 1; i < basePerf.length; i++) c.lineTo(tX(i), tY(basePerf[i]));
     c.strokeStyle = lineColor;
-    c.lineWidth = 7;
+    c.lineWidth = 6;
     c.lineJoin = 'round';
     c.lineCap = 'round';
     c.stroke();
@@ -2489,58 +2470,60 @@ async function exportDayCardToPNG(dateStr) {
       const isToday = i === dayChartIdx;
 
       if (isToday) {
-        c.beginPath(); c.arc(px, py, 22, 0, Math.PI*2);
+        c.beginPath(); c.arc(px, py, 18, 0, Math.PI*2);
         c.fillStyle = lineColor + '33'; c.fill();
       }
-      c.beginPath(); c.arc(px, py, isToday ? 13 : 7, 0, Math.PI*2);
+      c.beginPath(); c.arc(px, py, isToday ? 11 : 6, 0, Math.PI*2);
       c.fillStyle = isToday ? '#ffffff' : lineColor;
       c.fill();
       if (isToday) {
-        c.strokeStyle = lineColor; c.lineWidth = 4;
-        c.beginPath(); c.arc(px, py, 13, 0, Math.PI*2); c.stroke();
+        c.strokeStyle = lineColor; c.lineWidth = 3.5;
+        c.beginPath(); c.arc(px, py, 11, 0, Math.PI*2); c.stroke();
       }
 
-      // Label X
-      c.fillStyle = isToday ? '#ffffff' : 'rgba(255,255,255,0.35)';
-      c.font = `${isToday ? 'bold ' : ''}24px "Plus Jakarta Sans", sans-serif`;
+      // Fechas sutiles
+      c.fillStyle = isToday ? '#ffffff' : 'rgba(255,255,255,0.4)';
+      c.font = `${isToday ? 'bold ' : ''}22px "Plus Jakarta Sans", sans-serif`;
       c.textAlign = 'center'; c.textBaseline = 'top';
       c.fillText(chartLabels[i], px, gOY + 8);
     });
 
-    cy += gH + gPadT + gPadB + 10;
+    cy = gOY + 70;
   }
 
-  // ── DINO ───────────────────────────────────────────────────────────────────
-  hline(cy, 0.1); cy += 40;
+  // ── 7. SECCIÓN DEL DINOSAURIO (Adaptada en tamaño y centrada) ─────────────
+  c.fillStyle = 'rgba(255,255,255,0.6)';
+  c.font = '600 28px "Plus Jakarta Sans", sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText('HOY PODRÍAS HABER MOVIDO UN...', W/2, cy);
+  cy += 70;
 
-  c.fillStyle = 'rgba(255,255,255,0.4)';
-  c.font = '600 32px "Plus Jakarta Sans", sans-serif';
-  c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('HOY PODRÍAS HABER MOVIDO UN...', W/2, cy + 25);
+  // Emoji del dinosaurio
+  c.font = '84px serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText(dino.emoji, W/2, cy);
+  cy += 65;
 
-  // Emoji grande centrado
-  c.font = '100px serif';
-  c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText(dino.emoji, W/2 - 180, cy + 115);
-
+  // Nombre del dinosaurio: cálculo dinámico del tamaño de fuente para que NUNCA se corte
+  const maxDinoTextW = 760;
+  let dinoFontSize = 64;
+  c.font = `bold ${dinoFontSize}px "Plus Jakarta Sans", sans-serif`;
+  while (c.measureText(dino.name.toUpperCase()).width > maxDinoTextW && dinoFontSize > 32) {
+    dinoFontSize -= 2;
+    c.font = `bold ${dinoFontSize}px "Plus Jakarta Sans", sans-serif`;
+  }
   c.fillStyle = '#ffffff';
-  c.font = 'bold 90px "Plus Jakarta Sans", sans-serif';
-  c.textAlign = 'left'; c.textBaseline = 'middle';
-  c.fillText(dino.name.toUpperCase(), W/2 - 100, cy + 100);
+  c.fillText(dino.name.toUpperCase(), W/2, cy);
+  cy += 45;
 
-  c.fillStyle = 'rgba(255,255,255,0.4)';
-  c.font = '500 34px "Plus Jakarta Sans", sans-serif';
-  c.fillText(dino.desc, W/2 - 100, cy + 160);
-  cy += dinoH;
+  // Descripción del dinosaurio
+  c.fillStyle = 'rgba(255,255,255,0.5)';
+  c.font = '500 28px "Plus Jakarta Sans", sans-serif';
+  c.fillText(dino.desc, W/2, cy);
 
-  // ── FOOTER ─────────────────────────────────────────────────────────────────
-  hline(cy, 0.12); cy += 50;
-  c.fillStyle = 'rgba(255,255,255,0.3)';
-  c.font = '600 34px "Plus Jakarta Sans", sans-serif';
-  c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('IronTrack · Supera tus marcas cada día', W/2, cy + 20);
-
-  // ── DESCARGAR ─────────────────────────────────────────────────────────────
+  // ── DESCARGA DEL PNG ──────────────────────────────────────────────────────
   setTimeout(() => {
     const link = document.createElement('a');
     link.download = `irontrack-${dateStr}.png`;
