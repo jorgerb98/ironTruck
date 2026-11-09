@@ -649,6 +649,10 @@ function initCalendar() {
   document.getElementById('btn-add-workout-on-selected-date').addEventListener('click', () => {
     goToWorkoutForDate(calendarSelectedDate);
   });
+
+  document.getElementById('btn-export-day-card').addEventListener('click', () => {
+    exportDayCardToPNG(calendarSelectedDate);
+  });
 }
 
 function renderCalendar() {
@@ -2157,4 +2161,523 @@ function showToast(msg) {
     toast.classList.remove('opacity-100', 'translate-y-0');
     toast.classList.add('opacity-0', '-translate-y-2');
   }, 2200);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BBDD DINOSAURIOS POR PESO (en toneladas)
+// ─────────────────────────────────────────────────────────────────────────────
+const DINO_DB = [
+  { name: 'Microraptor',      emoji: '🦕', minT: 0,   maxT: 0.5,  desc: 'pequeñín pero feroz' },
+  { name: 'Velociraptor',     emoji: '🦖', minT: 0.5, maxT: 1.5,  desc: 'ágil como un rayo' },
+  { name: 'Dilophosaurus',    emoji: '🦕', minT: 1.5, maxT: 3,    desc: 'con cresta y todo' },
+  { name: 'Allosaurus',       emoji: '🦖', minT: 3,   maxT: 5,    desc: 'depredador del Jurásico' },
+  { name: 'Carnotaurus',      emoji: '🦕', minT: 5,   maxT: 7,    desc: 'el toro del Cretácico' },
+  { name: 'Triceratops',      emoji: '🦕', minT: 7,   maxT: 9,    desc: 'con tres cuernos imparables' },
+  { name: 'T-Rex',            emoji: '🦖', minT: 9,   maxT: 12,   desc: 'el rey de los dinosaurios' },
+  { name: 'Spinosaurus',      emoji: '🦕', minT: 12,  maxT: 15,   desc: 'más grande que el T-Rex' },
+  { name: 'Brachiosaurus',    emoji: '🦕', minT: 15,  maxT: 18,   desc: 'cuello hasta las nubes' },
+  { name: 'Diplodocus',       emoji: '🦕', minT: 18,  maxT: 22,   desc: 'con cola de látigo gigante' },
+  { name: 'Apatosaurus',      emoji: '🦕', minT: 22,  maxT: 26,   desc: 'coloso del Jurásico' },
+  { name: 'Argentinosaurus',  emoji: '🦕', minT: 26,  maxT: 100,  desc: 'el dinosaurio más pesado' },
+];
+
+function getDinoForKg(totalKg) {
+  const totalT = totalKg / 1000;
+  const dino = DINO_DB.find(d => totalT >= d.minT && totalT < d.maxT)
+    || DINO_DB[DINO_DB.length - 1];
+  return dino;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORTAR TARJETA DEL DÍA COMO PNG
+// ─────────────────────────────────────────────────────────────────────────────
+async function exportDayCardToPNG(dateStr) {
+  const workouts = DB.getWorkouts().filter(w => w.date === dateStr);
+
+  if (workouts.length === 0) {
+    showToast('No hay entrenos este día para exportar');
+    return;
+  }
+
+  showToast('Generando tarjeta... ⏳');
+
+  // ── DATOS DEL DÍA ──────────────────────────────────────────────────────────
+  const totalKg = workouts.reduce((sum, w) => sum + calculateSessionVolume(w), 0);
+  const totalSeries = workouts.reduce((sum, w) =>
+    sum + w.exercises.reduce((s, ex) => s + (ex.sets ? ex.sets.length : 0), 0), 0);
+  const tags = [...new Set(workouts.map(w => w.tag || 'Entrenamiento General'))];
+  const tagLabel = tags.join(' · ');
+  const dino = getDinoForKg(totalKg);
+
+  const dateObj = new Date(dateStr + 'T00:00:00');
+  const dateFormatted = dateObj.toLocaleDateString('es-ES', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  // ── CALCULAR MEJORA ─────────────────────────────────────────────────────────
+  // Comparar con la sesión anterior de la misma rutina
+  const allWorkoutsSorted = DB.getWorkouts().sort((a, b) => new Date(a.date) - new Date(b.date));
+  let improvementText = null;
+  let improvementValue = null;
+
+  for (const tag of tags) {
+    const tagWorkouts = allWorkoutsSorted.filter(w => (w.tag || 'Entrenamiento General') === tag);
+    const idx = tagWorkouts.findIndex(w => w.date === dateStr);
+    if (idx > 0) {
+      const currW = tagWorkouts[idx];
+      const prevW = tagWorkouts[idx - 1];
+      const matchedImps = [];
+      currW.exercises.forEach(currEx => {
+        const prevEx = prevW.exercises.find(e => e.exerciseId === currEx.exerciseId);
+        if (prevEx && prevEx.sets.length > 0 && currEx.sets.length > 0) {
+          const prev1RM = Math.max(...prevEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
+          const curr1RM = Math.max(...currEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
+          if (prev1RM > 0) matchedImps.push((curr1RM - prev1RM) / prev1RM);
+        }
+      });
+      if (matchedImps.length > 0) {
+        improvementValue = Math.round((matchedImps.reduce((a,b)=>a+b,0)/matchedImps.length)*1000)/10;
+        improvementText = `${improvementValue >= 0 ? '+' : ''}${improvementValue}% vs sesión anterior`;
+        break;
+      }
+    }
+  }
+
+  // ── CANVAS SETUP ───────────────────────────────────────────────────────────
+  const W = 1080;
+  const H = 1920;
+  const canvas = document.getElementById('export-canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx2d = canvas.getContext('2d');
+
+  // --- FONDO OSCURO con gradientes ---
+  const bg = ctx2d.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#080511');
+  bg.addColorStop(1, '#0e0820');
+  ctx2d.fillStyle = bg;
+  ctx2d.fillRect(0, 0, W, H);
+
+  // Halo morado top-left
+  const gTL = ctx2d.createRadialGradient(0, 0, 0, 0, 0, 700);
+  gTL.addColorStop(0, 'rgba(168,85,247,0.22)');
+  gTL.addColorStop(1, 'transparent');
+  ctx2d.fillStyle = gTL;
+  ctx2d.fillRect(0, 0, W, H);
+
+  // Halo fucsia top-right
+  const gTR = ctx2d.createRadialGradient(W, 0, 0, W, 0, 600);
+  gTR.addColorStop(0, 'rgba(236,72,153,0.16)');
+  gTR.addColorStop(1, 'transparent');
+  ctx2d.fillStyle = gTR;
+  ctx2d.fillRect(0, 0, W, H);
+
+  // Halo morado bottom-center
+  const gBC = ctx2d.createRadialGradient(W/2, H, 0, W/2, H, 700);
+  gBC.addColorStop(0, 'rgba(147,51,234,0.18)');
+  gBC.addColorStop(1, 'transparent');
+  ctx2d.fillStyle = gBC;
+  ctx2d.fillRect(0, 0, W, H);
+
+  // Micro-grid
+  ctx2d.save();
+  ctx2d.strokeStyle = 'rgba(255,255,255,0.025)';
+  ctx2d.lineWidth = 1;
+  const gridSize = 54;
+  for (let x = 0; x <= W; x += gridSize) { ctx2d.beginPath(); ctx2d.moveTo(x, 0); ctx2d.lineTo(x, H); ctx2d.stroke(); }
+  for (let y = 0; y <= H; y += gridSize) { ctx2d.beginPath(); ctx2d.moveTo(0, y); ctx2d.lineTo(W, y); ctx2d.stroke(); }
+  ctx2d.restore();
+
+  // ── HELPER: rounded rect ───────────────────────────────────────────────────
+  function roundRect(x, y, w, h, r) {
+    ctx2d.beginPath();
+    ctx2d.moveTo(x + r, y);
+    ctx2d.lineTo(x + w - r, y);
+    ctx2d.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx2d.lineTo(x + w, y + h - r);
+    ctx2d.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx2d.lineTo(x + r, y + h);
+    ctx2d.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx2d.lineTo(x, y + r);
+    ctx2d.quadraticCurveTo(x, y, x + r, y);
+    ctx2d.closePath();
+  }
+
+  // ── LOGO "IT" badge ────────────────────────────────────────────────────────
+  const logoX = W/2;
+  const logoY = 180;
+  const logoR = 68;
+
+  // Glow exterior
+  const logoGlow = ctx2d.createRadialGradient(logoX, logoY, 0, logoX, logoY, logoR + 40);
+  logoGlow.addColorStop(0, 'rgba(217,70,239,0.3)');
+  logoGlow.addColorStop(1, 'transparent');
+  ctx2d.fillStyle = logoGlow;
+  ctx2d.beginPath();
+  ctx2d.arc(logoX, logoY, logoR + 40, 0, Math.PI * 2);
+  ctx2d.fill();
+
+  // Badge gradient
+  const logoBg = ctx2d.createLinearGradient(logoX - logoR, logoY - logoR, logoX + logoR, logoY + logoR);
+  logoBg.addColorStop(0, '#7c3aed');
+  logoBg.addColorStop(0.5, '#c026d3');
+  logoBg.addColorStop(1, '#ec4899');
+  roundRect(logoX - logoR, logoY - logoR, logoR * 2, logoR * 2, 36);
+  ctx2d.fillStyle = logoBg;
+  ctx2d.fill();
+
+  // "IT" text
+  ctx2d.fillStyle = '#ffffff';
+  ctx2d.font = 'bold 72px "JetBrains Mono", monospace';
+  ctx2d.textAlign = 'center';
+  ctx2d.textBaseline = 'middle';
+  ctx2d.fillText('IT', logoX, logoY);
+
+  // Green dot
+  ctx2d.beginPath();
+  ctx2d.arc(logoX + logoR - 12, logoY - logoR + 12, 16, 0, Math.PI * 2);
+  ctx2d.fillStyle = '#10b981';
+  ctx2d.fill();
+  ctx2d.strokeStyle = '#080511';
+  ctx2d.lineWidth = 4;
+  ctx2d.stroke();
+
+  // ── APP NAME ───────────────────────────────────────────────────────────────
+  ctx2d.textAlign = 'center';
+  ctx2d.textBaseline = 'alphabetic';
+  ctx2d.fillStyle = '#ffffff';
+  ctx2d.font = 'bold 90px "Plus Jakarta Sans", sans-serif';
+  ctx2d.fillText('IRONTRACK', W/2, logoY + logoR + 80);
+
+  // PRO badge
+  ctx2d.font = 'bold 32px "Plus Jakarta Sans", sans-serif';
+  const proW = 110, proH = 46, proX = W/2 - proW/2, proY = logoY + logoR + 100;
+  roundRect(proX, proY, proW, proH, 10);
+  ctx2d.fillStyle = 'rgba(168,85,247,0.25)';
+  ctx2d.fill();
+  ctx2d.strokeStyle = 'rgba(168,85,247,0.5)';
+  ctx2d.lineWidth = 2;
+  ctx2d.stroke();
+  ctx2d.fillStyle = '#e879f9';
+  ctx2d.textAlign = 'center';
+  ctx2d.textBaseline = 'middle';
+  ctx2d.fillText('PRO', W/2, proY + proH/2);
+
+  // ── FECHA ─────────────────────────────────────────────────────────────────
+  let curY = proY + proH + 70;
+  ctx2d.fillStyle = '#c084fc';
+  ctx2d.font = '500 40px "Plus Jakarta Sans", sans-serif';
+  ctx2d.textAlign = 'center';
+  ctx2d.textBaseline = 'middle';
+  ctx2d.fillText(dateFormatted.toUpperCase(), W/2, curY);
+
+  // Rutina tag
+  curY += 60;
+  ctx2d.fillStyle = '#a855f7';
+  ctx2d.font = '600 36px "Plus Jakarta Sans", sans-serif';
+  ctx2d.fillText(tagLabel, W/2, curY);
+
+  // ── SEPARADOR ─────────────────────────────────────────────────────────────
+  curY += 60;
+  const sepGrad = ctx2d.createLinearGradient(100, curY, W - 100, curY);
+  sepGrad.addColorStop(0, 'transparent');
+  sepGrad.addColorStop(0.3, 'rgba(168,85,247,0.6)');
+  sepGrad.addColorStop(0.7, 'rgba(217,70,239,0.6)');
+  sepGrad.addColorStop(1, 'transparent');
+  ctx2d.strokeStyle = sepGrad;
+  ctx2d.lineWidth = 2;
+  ctx2d.beginPath();
+  ctx2d.moveTo(100, curY);
+  ctx2d.lineTo(W - 100, curY);
+  ctx2d.stroke();
+
+  // ── STAT CARD HELPER ──────────────────────────────────────────────────────
+  function drawStatCard(x, y, w, h, label, value, unit, color) {
+    // Card background
+    roundRect(x, y, w, h, 32);
+    const cardBg = ctx2d.createLinearGradient(x, y, x + w, y + h);
+    cardBg.addColorStop(0, 'rgba(23,13,38,0.85)');
+    cardBg.addColorStop(1, 'rgba(14,8,26,0.95)');
+    ctx2d.fillStyle = cardBg;
+    ctx2d.fill();
+    ctx2d.strokeStyle = `${color}44`;
+    ctx2d.lineWidth = 2;
+    ctx2d.stroke();
+
+    // Label
+    ctx2d.fillStyle = color;
+    ctx2d.font = '700 32px "Plus Jakarta Sans", sans-serif';
+    ctx2d.textAlign = 'center';
+    ctx2d.textBaseline = 'alphabetic';
+    ctx2d.fillText(label.toUpperCase(), x + w/2, y + 60);
+
+    // Value
+    ctx2d.fillStyle = '#ffffff';
+    ctx2d.font = 'bold 88px "JetBrains Mono", monospace';
+    ctx2d.textBaseline = 'alphabetic';
+    ctx2d.fillText(value, x + w/2, y + 160);
+
+    // Unit
+    if (unit) {
+      ctx2d.fillStyle = `${color}cc`;
+      ctx2d.font = '600 34px "Plus Jakarta Sans", sans-serif';
+      ctx2d.fillText(unit, x + w/2, y + 205);
+    }
+  }
+
+  // ── ESTADÍSTICAS PRINCIPALES (2 tarjetas) ─────────────────────────────────
+  curY += 40;
+  const cardW = (W - 120 - 30) / 2;
+  const cardH = 240;
+
+  drawStatCard(60, curY, cardW, cardH,
+    'Volumen total',
+    totalKg >= 1000 ? (totalKg/1000).toFixed(1) : totalKg.toLocaleString(),
+    totalKg >= 1000 ? 'Toneladas' : 'kg',
+    '#d946ef'
+  );
+  drawStatCard(60 + cardW + 30, curY, cardW, cardH,
+    'Series efectivas',
+    String(totalSeries),
+    'series',
+    '#a855f7'
+  );
+
+  curY += cardH + 30;
+
+  // ── MEJORA ────────────────────────────────────────────────────────────────
+  if (improvementText) {
+    const impColor = improvementValue >= 0 ? '#10b981' : '#f43f5e';
+    roundRect(60, curY, W - 120, 110, 24);
+    ctx2d.fillStyle = improvementValue >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)';
+    ctx2d.fill();
+    ctx2d.strokeStyle = impColor + '55';
+    ctx2d.lineWidth = 2;
+    ctx2d.stroke();
+
+    const arrow = improvementValue >= 0 ? '▲' : '▼';
+    ctx2d.fillStyle = impColor;
+    ctx2d.font = 'bold 56px "JetBrains Mono", monospace';
+    ctx2d.textAlign = 'center';
+    ctx2d.textBaseline = 'middle';
+    ctx2d.fillText(`${arrow} ${improvementText}`, W/2, curY + 55);
+
+    curY += 140;
+  } else {
+    curY += 20;
+  }
+
+  // ── GRÁFICO DE EVOLUCIÓN (renderizado en canvas offline) ──────────────────
+  const chartAreaH = 380;
+  const chartAreaW = W - 120;
+  const chartX = 60;
+  const chartY = curY;
+
+  // Fondo del área del gráfico
+  roundRect(chartX, chartY, chartAreaW, chartAreaH, 32);
+  const chartBg = ctx2d.createLinearGradient(chartX, chartY, chartX + chartAreaW, chartY + chartAreaH);
+  chartBg.addColorStop(0, 'rgba(23,13,38,0.85)');
+  chartBg.addColorStop(1, 'rgba(14,8,26,0.95)');
+  ctx2d.fillStyle = chartBg;
+  ctx2d.fill();
+  ctx2d.strokeStyle = 'rgba(168,85,247,0.2)';
+  ctx2d.lineWidth = 2;
+  ctx2d.stroke();
+
+  ctx2d.fillStyle = '#a855f7';
+  ctx2d.font = '700 30px "Plus Jakarta Sans", sans-serif';
+  ctx2d.textAlign = 'center';
+  ctx2d.textBaseline = 'alphabetic';
+  ctx2d.fillText('EVOLUCIÓN & MEJORA', chartX + chartAreaW/2, chartY + 48);
+
+  // Intentar leer datos del gráfico de mejora global del home
+  const sortedAllW = DB.getWorkouts().sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Buscar datos específicos de la rutina del día
+  const primaryTag = tags[0];
+  const tagWorkoutsForChart = sortedAllW.filter(w => (w.tag || 'Entrenamiento General') === primaryTag);
+
+  if (tagWorkoutsForChart.length >= 2) {
+    const basePerf = [100];
+    const chartLabels = [tagWorkoutsForChart[0].date.substring(5)];
+    let lastW = tagWorkoutsForChart[0];
+
+    for (let i = 1; i < tagWorkoutsForChart.length; i++) {
+      const cW = tagWorkoutsForChart[i];
+      chartLabels.push(cW.date.substring(5));
+      const matchImps = [];
+      cW.exercises.forEach(cEx => {
+        const pEx = lastW.exercises.find(e => e.exerciseId === cEx.exerciseId);
+        if (pEx && pEx.sets.length > 0 && cEx.sets.length > 0) {
+          const p1 = Math.max(...pEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
+          const c1 = Math.max(...cEx.sets.map(s => calculate1RM(parseFloat(s.weight)||0, parseInt(s.reps)||0)));
+          if (p1 > 0) matchImps.push((c1 - p1) / p1);
+        }
+      });
+      let sf = matchImps.length > 0 ? matchImps.reduce((a,b)=>a+b,0)/matchImps.length : 0;
+      sf = Math.max(-0.25, Math.min(0.25, sf));
+      const prev = basePerf[basePerf.length - 1];
+      basePerf.push(Math.round(prev * (1 + sf) * 10) / 10);
+      lastW = cW;
+    }
+
+    // Marcar el punto del día actual
+    const dayIdx = tagWorkoutsForChart.findIndex(w => w.date === dateStr);
+
+    // Dibujar gráfico manualmente
+    const gPadL = 80, gPadR = 40, gPadT = 70, gPadB = 60;
+    const gW = chartAreaW - gPadL - gPadR;
+    const gH = chartAreaH - gPadT - gPadB;
+    const gOriginX = chartX + gPadL;
+    const gOriginY = chartY + gPadT + gH;
+
+    const minVal = Math.min(...basePerf) - 5;
+    const maxVal = Math.max(...basePerf) + 5;
+    const range = maxVal - minVal || 1;
+
+    const toPixX = (i) => gOriginX + (i / (basePerf.length - 1 || 1)) * gW;
+    const toPixY = (v) => gOriginY - ((v - minVal) / range) * gH;
+
+    // Grid lines
+    ctx2d.strokeStyle = 'rgba(74,29,117,0.3)';
+    ctx2d.lineWidth = 1;
+    for (let gi = 0; gi <= 4; gi++) {
+      const gy = gOriginY - (gi / 4) * gH;
+      ctx2d.beginPath(); ctx2d.moveTo(gOriginX, gy); ctx2d.lineTo(gOriginX + gW, gy); ctx2d.stroke();
+      const gv = minVal + (gi / 4) * range;
+      ctx2d.fillStyle = '#7c3aed';
+      ctx2d.font = '24px "JetBrains Mono", monospace';
+      ctx2d.textAlign = 'right';
+      ctx2d.textBaseline = 'middle';
+      ctx2d.fillText(Math.round(gv) + '%', gOriginX - 10, gy);
+    }
+
+    // Fill area
+    const isPos = basePerf[basePerf.length - 1] >= 100;
+    const lineColor = isPos ? '#10b981' : '#f43f5e';
+    const fillColorStart = isPos ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)';
+    const fillColorEnd = isPos ? 'rgba(16,185,129,0.02)' : 'rgba(244,63,94,0.02)';
+
+    const areaFill = ctx2d.createLinearGradient(0, gOriginY - gH, 0, gOriginY);
+    areaFill.addColorStop(0, fillColorStart);
+    areaFill.addColorStop(1, fillColorEnd);
+
+    ctx2d.beginPath();
+    ctx2d.moveTo(toPixX(0), gOriginY);
+    basePerf.forEach((v, i) => ctx2d.lineTo(toPixX(i), toPixY(v)));
+    ctx2d.lineTo(toPixX(basePerf.length - 1), gOriginY);
+    ctx2d.closePath();
+    ctx2d.fillStyle = areaFill;
+    ctx2d.fill();
+
+    // Line
+    ctx2d.beginPath();
+    ctx2d.moveTo(toPixX(0), toPixY(basePerf[0]));
+    for (let i = 1; i < basePerf.length; i++) {
+      ctx2d.lineTo(toPixX(i), toPixY(basePerf[i]));
+    }
+    ctx2d.strokeStyle = lineColor;
+    ctx2d.lineWidth = 5;
+    ctx2d.lineJoin = 'round';
+    ctx2d.stroke();
+
+    // Dots + labels
+    basePerf.forEach((v, i) => {
+      const px = toPixX(i);
+      const py = toPixY(v);
+      const isToday = i === dayIdx;
+
+      if (isToday) {
+        // Pulsing glow ring
+        ctx2d.beginPath();
+        ctx2d.arc(px, py, 20, 0, Math.PI * 2);
+        ctx2d.fillStyle = lineColor + '44';
+        ctx2d.fill();
+      }
+
+      ctx2d.beginPath();
+      ctx2d.arc(px, py, isToday ? 12 : 7, 0, Math.PI * 2);
+      ctx2d.fillStyle = isToday ? '#ffffff' : lineColor;
+      ctx2d.fill();
+      ctx2d.strokeStyle = isToday ? lineColor : '#080511';
+      ctx2d.lineWidth = isToday ? 4 : 2;
+      ctx2d.stroke();
+
+      // X labels
+      ctx2d.fillStyle = isToday ? '#e879f9' : '#7c3aed';
+      ctx2d.font = `${isToday ? 'bold ' : ''}22px "JetBrains Mono", monospace`;
+      ctx2d.textAlign = 'center';
+      ctx2d.textBaseline = 'top';
+      ctx2d.fillText(chartLabels[i], px, gOriginY + 8);
+    });
+
+  } else {
+    // Sin suficientes datos para gráfico
+    ctx2d.fillStyle = '#7c3aed';
+    ctx2d.font = '500 34px "Plus Jakarta Sans", sans-serif';
+    ctx2d.textAlign = 'center';
+    ctx2d.textBaseline = 'middle';
+    ctx2d.fillText('Registra más sesiones para ver la evolución', chartX + chartAreaW/2, chartY + chartAreaH/2);
+  }
+
+  curY = chartY + chartAreaH + 50;
+
+  // ── DINOSAURIO ────────────────────────────────────────────────────────────
+  const dinoCardH = 220;
+  roundRect(60, curY, W - 120, dinoCardH, 32);
+  const dinoBg = ctx2d.createLinearGradient(60, curY, W - 60, curY + dinoCardH);
+  dinoBg.addColorStop(0, 'rgba(30,10,55,0.9)');
+  dinoBg.addColorStop(1, 'rgba(14,8,26,0.95)');
+  ctx2d.fillStyle = dinoBg;
+  ctx2d.fill();
+  ctx2d.strokeStyle = 'rgba(217,70,239,0.3)';
+  ctx2d.lineWidth = 2;
+  ctx2d.stroke();
+
+  // Emoji del dino (grande)
+  ctx2d.font = '90px serif';
+  ctx2d.textAlign = 'left';
+  ctx2d.textBaseline = 'middle';
+  ctx2d.fillText(dino.emoji, 100, curY + dinoCardH/2);
+
+  // Texto del dino
+  ctx2d.fillStyle = '#e879f9';
+  ctx2d.font = '700 30px "Plus Jakarta Sans", sans-serif';
+  ctx2d.textAlign = 'left';
+  ctx2d.textBaseline = 'alphabetic';
+  ctx2d.fillText('HOY PODRÍAS HABER MOVIDO UN...', 240, curY + 72);
+
+  ctx2d.fillStyle = '#ffffff';
+  ctx2d.font = 'bold 72px "Plus Jakarta Sans", sans-serif';
+  ctx2d.fillText(dino.name.toUpperCase(), 240, curY + 148);
+
+  ctx2d.fillStyle = '#a855f7';
+  ctx2d.font = '500 32px "Plus Jakarta Sans", sans-serif';
+  ctx2d.fillText(`(${dino.desc})`, 240, curY + 190);
+
+  curY += dinoCardH + 50;
+
+  // ── FOOTER ────────────────────────────────────────────────────────────────
+  // Línea decorativa
+  const fSepGrad = ctx2d.createLinearGradient(100, curY, W - 100, curY);
+  fSepGrad.addColorStop(0, 'transparent');
+  fSepGrad.addColorStop(0.3, 'rgba(168,85,247,0.4)');
+  fSepGrad.addColorStop(0.7, 'rgba(217,70,239,0.4)');
+  fSepGrad.addColorStop(1, 'transparent');
+  ctx2d.strokeStyle = fSepGrad;
+  ctx2d.lineWidth = 1.5;
+  ctx2d.beginPath(); ctx2d.moveTo(100, curY); ctx2d.lineTo(W - 100, curY); ctx2d.stroke();
+
+  ctx2d.fillStyle = '#7c3aed';
+  ctx2d.font = '500 32px "Plus Jakarta Sans", sans-serif';
+  ctx2d.textAlign = 'center';
+  ctx2d.textBaseline = 'middle';
+  ctx2d.fillText('IronTrack · Supera tus marcas cada día', W/2, curY + 50);
+
+  // ── DESCARGAR ─────────────────────────────────────────────────────────────
+  const link = document.createElement('a');
+  link.download = `irontrack-${dateStr}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('Tarjeta exportada ✓');
 }
