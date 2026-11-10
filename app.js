@@ -445,7 +445,7 @@ function selectPickerExForRoutine(id) {
   document.getElementById('modal-exercise-picker').classList.add('hidden');
 }
 
-// Cargar la rutina seleccionada en la sesión activa: CON 1 REPETICIÓN POR DEFECTO PARA QUE EL USUARIO META MÁS
+// Cargar la rutina seleccionada en la sesión activa: coge pesos y reps de la última sesión de la misma rutina
 function loadRoutineIntoSession(routine) {
   if (!routine || !routine.exercises) return;
 
@@ -457,21 +457,60 @@ function loadRoutineIntoSession(routine) {
   const exMap = {};
   allEx.forEach(e => exMap[e.id] = e);
 
+  // Buscar la última sesión realizada de ESTA MISMA RUTINA para replicar sus pesos y repeticiones
+  const allWorkouts = DB.getWorkouts().slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+  const lastSameRoutineWorkout = allWorkouts.find(w => (w.tag || '').trim().toLowerCase() === routine.name.trim().toLowerCase());
+
   currentSession.exercises = routine.exercises.map(re => {
-    // Garantizar que numSets sea un número válido mayor que 0
     let numSets = parseInt(re.targetSets, 10);
     if (isNaN(numSets) || numSets <= 0) {
       numSets = 3;
     }
 
+    // Buscar si en la última sesión de esta misma rutina se hizo este ejercicio
+    let prevSets = null;
+    if (lastSameRoutineWorkout && lastSameRoutineWorkout.exercises) {
+      const matchedEx = lastSameRoutineWorkout.exercises.find(e => e.exerciseId === re.exerciseId);
+      if (matchedEx && matchedEx.sets && matchedEx.sets.length > 0) {
+        prevSets = matchedEx.sets;
+      }
+    }
+
+    // Si no se encontró en la misma rutina, buscar la última vez que se hizo en cualquier rutina
     const lastPerf = findLastPerformance(re.exerciseId);
+
     const sets = [];
     for (let i = 0; i < numSets; i++) {
-      sets.push({
-        weight: lastPerf ? lastPerf.weight : 0,
-        reps: 1, // REQUISITO: Pone solo 1 repetición para empezar y el usuario la sube al entrenar
-        rir: 2  // Cambiado RPE por RIR (2 repeticiones en recámara por defecto)
-      });
+      if (prevSets && prevSets[i]) {
+        // Coger exactamente peso, reps y rir de esa serie en la misma rutina
+        sets.push({
+          weight: parseFloat(prevSets[i].weight) || 0,
+          reps: parseInt(prevSets[i].reps, 10) || 1,
+          rir: prevSets[i].rir !== undefined ? prevSets[i].rir : 2
+        });
+      } else if (prevSets && prevSets.length > 0) {
+        // Si hay más series objetivo que las previas, repetir los datos de la última serie de esa rutina
+        const lastInRoutine = prevSets[prevSets.length - 1];
+        sets.push({
+          weight: parseFloat(lastInRoutine.weight) || 0,
+          reps: parseInt(lastInRoutine.reps, 10) || 1,
+          rir: lastInRoutine.rir !== undefined ? lastInRoutine.rir : 2
+        });
+      } else if (lastPerf) {
+        // Fallback al último rendimiento global
+        sets.push({
+          weight: parseFloat(lastPerf.weight) || 0,
+          reps: parseInt(lastPerf.reps, 10) || 1,
+          rir: lastPerf.rir !== undefined ? lastPerf.rir : 2
+        });
+      } else {
+        // Primeriza sin registros previos
+        sets.push({
+          weight: 0,
+          reps: 1,
+          rir: 2
+        });
+      }
     }
 
     // Buscar rango de reps recomendado si no lo tiene explícito
@@ -491,7 +530,10 @@ function loadRoutineIntoSession(routine) {
   openExerciseIndices.clear(); // Empiezan contraídos para ver la rutina limpia
   autosaveSession();
   renderSessionExercises();
-  showToast(`Rutina "${routine.name}" cargada con 1 repetición base.`);
+  showToast(lastSameRoutineWorkout 
+    ? `Rutina "${routine.name}" cargada con pesos y reps anteriores.`
+    : `Rutina "${routine.name}" cargada.`
+  );
 }
 
 function renderRoutinesList() {
@@ -2219,21 +2261,312 @@ function showToast(msg) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BBDD DINOSAURIOS POR PESO (en toneladas)
+// BBDD DINOSAURIOS REALISTAS POR PESO (en toneladas) - ICONOS SVG REALISTAS
 // ─────────────────────────────────────────────────────────────────────────────
 const DINO_DB = [
-  { name: 'Microraptor',      emoji: '🦕', minT: 0,   maxT: 0.5,  desc: 'pequeñín pero feroz' },
-  { name: 'Velociraptor',     emoji: '🦖', minT: 0.5, maxT: 1.5,  desc: 'ágil como un rayo' },
-  { name: 'Dilophosaurus',    emoji: '🦕', minT: 1.5, maxT: 3,    desc: 'con cresta y todo' },
-  { name: 'Allosaurus',       emoji: '🦖', minT: 3,   maxT: 5,    desc: 'depredador del Jurásico' },
-  { name: 'Carnotaurus',      emoji: '🦕', minT: 5,   maxT: 7,    desc: 'el toro del Cretácico' },
-  { name: 'Triceratops',      emoji: '🦕', minT: 7,   maxT: 9,    desc: 'con tres cuernos imparables' },
-  { name: 'T-Rex',            emoji: '🦖', minT: 9,   maxT: 12,   desc: 'el rey de los dinosaurios' },
-  { name: 'Spinosaurus',      emoji: '🦕', minT: 12,  maxT: 15,   desc: 'más grande que el T-Rex' },
-  { name: 'Brachiosaurus',    emoji: '🦕', minT: 15,  maxT: 18,   desc: 'cuello hasta las nubes' },
-  { name: 'Diplodocus',       emoji: '🦕', minT: 18,  maxT: 22,   desc: 'con cola de látigo gigante' },
-  { name: 'Apatosaurus',      emoji: '🦕', minT: 22,  maxT: 26,   desc: 'coloso del Jurásico' },
-  { name: 'Argentinosaurus',  emoji: '🦕', minT: 26,  maxT: 100,  desc: 'el dinosaurio más pesado' },
+  {
+    name: 'Microraptor',
+    minT: 0,
+    maxT: 0.5,
+    desc: 'pequeñín pero feroz',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 70 22 C 73 18 78 17 83 19 C 88 21 90 25 89 28 C 87 31 83 32 79 31"/>
+      <path d="M 85 24 L 85 26 M 82 24 L 82 26.5 M 88 25 L 88 27"/>
+      <ellipse cx="84" cy="22" rx="1" ry="0.6" fill="currentColor" stroke="none"/>
+      <circle cx="75" cy="21" r="2" fill="none"/>
+      <circle cx="75" cy="21" r="0.8" fill="currentColor" stroke="none"/>
+      <path d="M 70 22 C 65 24 61 28 58 33 C 55 38 55 42 57 45"/>
+      <path d="M 57 45 C 54 50 50 54 44 57 C 38 60 30 61 22 60 C 14 59 8 56 4 52"/>
+      <path d="M 4 52 C 2 48 2 44 5 41 C 8 38 13 37 18 38"/>
+      <path d="M 4 52 C 6 56 10 59 16 59"/>
+      <path d="M 79 31 C 74 36 68 40 62 44 C 56 48 50 52 44 57"/>
+      <path d="M 60 35 C 63 40 65 46 64 52 C 61 58 56 62 51 65"/>
+      <path d="M 61 37 C 65 43 67 50 66 57"/>
+      <path d="M 62 39 C 67 46 69 54 67 61"/>
+      <path d="M 64 52 L 68 55 M 62 55 L 66 59 M 59 58 L 63 62 M 55 61 L 59 65 M 51 65 L 55 68"/>
+      <path d="M 38 56 C 36 62 36 68 38 74 C 40 80 44 84 48 86"/>
+      <path d="M 38 68 L 33 72 M 37 72 L 32 76 M 38 75 L 33 78"/>
+      <path d="M 30 59 C 28 65 26 72 24 78 C 22 82 20 84 17 85"/>
+      <path d="M 24 78 C 22 80 19 80 17 80"/>
+      <path d="M 17 85 C 15 85 13 83 14 81"/>
+    `
+  },
+  {
+    name: 'Velociraptor',
+    minT: 0.5,
+    maxT: 1.5,
+    desc: 'ágil como un rayo',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 72 26 C 76 21 83 20 89 23 C 95 26 97 30 95 33 C 92 36 87 37 82 36"/>
+      <path d="M 90 27 L 89 30 M 85 27 L 84 30 M 93 28 L 92 31"/>
+      <circle cx="78" cy="25" r="2.5" fill="none"/>
+      <circle cx="78" cy="25" r="1" fill="currentColor" stroke="none"/>
+      <ellipse cx="87" cy="24" rx="1.2" ry="0.7" fill="currentColor" stroke="none"/>
+      <path d="M 76 23 C 77 21 80 21 81 23"/>
+      <path d="M 72 26 C 66 29 62 33 60 38"/>
+      <path d="M 60 38 C 56 42 50 46 42 49 C 34 52 24 53 14 51 C 8 50 3 47 1 44"/>
+      <path d="M 1 44 C 2 40 5 38 9 38 C 13 38 17 40 20 43"/>
+      <path d="M 82 36 C 76 42 70 48 64 54 C 58 59 50 62 42 61 C 34 60 26 56 20 51 C 14 46 9 42 1 44"/>
+      <path d="M 64 44 C 68 50 72 56 74 62 C 73 65 70 66 68 65"/>
+      <path d="M 74 62 L 76 65 M 74 62 L 77 63 M 74 62 L 75 59"/>
+      <path d="M 65 46 C 68 52 70 59 68 65 M 67 48 C 71 55 72 62 70 67"/>
+      <path d="M 44 58 C 47 64 48 70 46 76 C 44 80 40 82 36 82"/>
+      <path d="M 46 76 C 44 82 40 86 36 88"/>
+      <path d="M 36 88 L 30 88 M 36 88 L 32 90"/>
+      <path d="M 46 72 C 50 70 54 68 58 70 C 60 73 57 76 53 74 C 50 73 48 74 48 76"/>
+      <path d="M 32 58 C 33 65 32 73 28 80 L 22 80"/>
+      <path d="M 28 80 L 23 83 M 28 80 L 20 80"/>
+    `
+  },
+  {
+    name: 'Dilophosaurus',
+    minT: 1.5,
+    maxT: 3,
+    desc: 'con cresta y todo',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 69 22 C 72 15 78 13 83 17 C 86 20 85 25 82 27"/>
+      <path d="M 65 24 C 68 18 73 16 77 19 C 79 22 78 26 75 28"/>
+      <path d="M 75 28 C 80 29 86 30 92 31 C 88 36 83 37 77 37"/>
+      <path d="M 90 31 C 91 29 90 27 88 28"/>
+      <path d="M 92 31 C 88 38 82 39 77 38"/>
+      <path d="M 88 32 L 87 35 M 83 32 L 82 36 M 86 36 L 85 34"/>
+      <circle cx="72" cy="24" r="2.2" fill="none"/>
+      <circle cx="72" cy="24" r="0.9" fill="currentColor" stroke="none"/>
+      <path d="M 69 22 C 62 26 57 32 55 38"/>
+      <path d="M 77 37 C 70 44 63 51 57 58 C 51 64 44 68 36 68 C 28 67 20 63 12 57 C 7 53 3 48 1 44"/>
+      <path d="M 55 38 C 48 44 40 49 30 52 C 20 54 11 51 5 46 C 3 44 1 44 1 44"/>
+      <path d="M 1 44 C 2 40 6 38 10 39"/>
+      <path d="M 54 48 C 58 54 61 60 62 65 L 66 64 M 62 65 L 65 67"/>
+      <path d="M 40 58 C 43 66 43 75 38 84 L 30 84 M 38 84 L 43 84"/>
+      <path d="M 30 61 C 32 69 29 76 24 82 L 18 82"/>
+    `
+  },
+  {
+    name: 'Allosaurus',
+    minT: 3,
+    maxT: 5,
+    desc: 'depredador del Jurásico',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 71 23 L 74 18 L 76 23"/>
+      <path d="M 76 23 C 82 23 88 25 93 28 C 97 31 98 35 97 38 C 93 41 86 42 79 41"/>
+      <path d="M 97 38 C 92 46 84 48 77 46"/>
+      <path d="M 93 29 L 92 33 M 88 29 L 87 34 M 83 30 L 82 34"/>
+      <path d="M 90 41 L 89 38 M 85 42 L 84 39 M 80 43 L 79 40"/>
+      <circle cx="75" cy="25" r="2.5" fill="none"/>
+      <circle cx="75" cy="25" r="1" fill="currentColor" stroke="none"/>
+      <path d="M 71 23 C 63 28 58 34 56 40"/>
+      <path d="M 56 40 C 50 46 42 51 32 54 C 22 56 12 54 6 50 C 3 48 1 45 1 42"/>
+      <path d="M 1 42 C 2 38 6 36 11 37 C 15 38 18 41 20 44"/>
+      <path d="M 79 41 C 72 50 65 58 57 64 C 48 69 38 70 28 67 C 18 63 10 57 4 49 C 2 46 1 43 1 42"/>
+      <path d="M 60 50 C 64 56 67 63 70 70"/>
+      <path d="M 70 70 L 74 72 M 70 70 L 73 67 M 70 70 L 72 74"/>
+      <path d="M 61 52 C 65 59 68 67 69 73 M 63 54 C 68 62 70 70 70 76"/>
+      <path d="M 40 62 C 44 70 46 79 44 87 L 36 87"/>
+      <path d="M 44 87 L 38 90 M 44 87 L 50 90 M 44 87 L 44 90"/>
+      <path d="M 28 65 C 30 73 29 81 25 87 L 18 87"/>
+      <path d="M 25 87 L 20 89 M 25 87 L 31 89"/>
+    `
+  },
+  {
+    name: 'Carnotaurus',
+    minT: 5,
+    maxT: 7,
+    desc: 'el toro del Cretácico',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 73 22 C 76 15 82 13 87 17 C 84 21 80 23 76 24"/>
+      <path d="M 76 24 C 82 24 90 26 94 29 C 92 33 87 35 82 34"/>
+      <path d="M 94 29 C 92 36 86 38 80 36"/>
+      <path d="M 90 30 L 89 33 M 85 30 L 84 33"/>
+      <path d="M 71 23 C 73 20 77 20 78 23"/>
+      <circle cx="74" cy="25" r="2.3" fill="none"/>
+      <circle cx="74" cy="25" r="0.9" fill="currentColor" stroke="none"/>
+      <path d="M 73 22 C 65 27 60 33 58 40"/>
+      <path d="M 58 40 C 52 46 44 51 34 54 C 24 57 14 55 7 51 C 4 48 2 46 1 44"/>
+      <path d="M 1 44 C 2 40 5 38 9 38 C 13 38 17 41 19 44"/>
+      <path d="M 80 36 C 73 44 67 52 61 60 C 54 66 46 70 37 69 C 28 68 20 63 12 56 C 7 51 3 47 1 44"/>
+      <path d="M 61 48 C 63 51 64 54 63 56 M 63 56 L 65 57"/>
+      <path d="M 42 64 C 46 72 47 81 44 89 L 36 89"/>
+      <path d="M 44 89 L 38 91 M 44 89 L 50 91 M 44 89 L 44 92"/>
+      <path d="M 30 66 C 32 74 31 82 27 88 L 20 88"/>
+      <path d="M 27 88 L 22 90 M 27 88 L 33 90"/>
+    `
+  },
+  {
+    name: 'Triceratops',
+    minT: 7,
+    maxT: 9,
+    desc: 'con tres cuernos imparables',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 32 26 C 32 14 42 10 52 14 C 60 18 64 26 61 34"/>
+      <path d="M 35 16 C 37 13 40 13 41 16 M 44 12 C 46 9 49 9 50 12 M 54 13 C 56 10 59 11 59 14"/>
+      <path d="M 58 29 C 68 22 78 18 90 18 C 84 23 76 27 65 30"/>
+      <path d="M 56 34 C 66 28 75 25 86 25 C 80 29 72 33 63 36"/>
+      <path d="M 68 44 L 72 36 L 73 44"/>
+      <path d="M 73 44 C 76 46 79 49 78 52 C 76 55 72 56 68 54 C 64 52 61 48 61 44"/>
+      <circle cx="62" cy="38" r="2" fill="none"/>
+      <circle cx="62" cy="38" r="0.8" fill="currentColor" stroke="none"/>
+      <path d="M 32 26 C 24 28 16 34 10 42 C 5 48 2 54 1 58"/>
+      <path d="M 1 58 C 4 60 9 60 14 58"/>
+      <path d="M 61 44 C 54 50 48 56 42 60 C 36 63 28 64 20 62 C 12 59 6 56 1 58"/>
+      <path d="M 54 59 C 55 67 55 76 52 84 L 45 84 M 52 84 L 58 84 M 52 84 L 52 87"/>
+      <path d="M 60 55 L 61 79 L 57 79"/>
+      <path d="M 22 62 C 23 71 22 80 19 87 L 12 87 M 19 87 L 25 87 M 19 87 L 19 90"/>
+      <path d="M 12 65 L 10 83 L 6 83"/>
+    `
+  },
+  {
+    name: 'T-Rex',
+    minT: 9,
+    maxT: 12,
+    desc: 'el rey de los dinosaurios',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 67 20 C 73 18 82 19 89 22 C 96 25 100 29 100 33 C 97 37 90 39 82 38"/>
+      <path d="M 76 24 C 79 22 83 22 84 25 C 83 27 80 27 78 26"/>
+      <circle cx="72" cy="24" r="3" fill="none"/>
+      <circle cx="72" cy="24" r="1.2" fill="currentColor" stroke="none"/>
+      <path d="M 100 33 C 95 44 86 47 78 44"/>
+      <path d="M 97 27 L 96 32 M 92 26 L 91 31 M 87 26 L 86 31 M 82 27 L 81 32"/>
+      <path d="M 94 40 L 93 36 M 89 41 L 88 37 M 84 42 L 83 38"/>
+      <path d="M 67 20 C 58 25 54 32 53 38"/>
+      <path d="M 53 38 C 46 44 38 49 28 52 C 18 55 10 54 4 50 C 2 48 1 46 1 44"/>
+      <path d="M 1 44 C 2 40 5 37 10 37 C 14 37 18 40 20 44"/>
+      <path d="M 78 44 C 71 54 63 63 54 69 C 44 74 33 73 23 69 C 14 64 7 57 2 48 C 1 46 1 44 1 44"/>
+      <path d="M 56 50 C 58 54 59 58 59 61 L 62 60 M 59 61 L 62 63"/>
+      <path d="M 54 46 C 57 50 58 56 57 61"/>
+      <path d="M 38 56 C 44 66 47 76 44 87 L 34 87"/>
+      <path d="M 34 87 L 27 90 M 34 87 L 34 91 M 34 87 L 42 90"/>
+      <path d="M 44 70 C 46 78 44 84 40 87"/>
+      <path d="M 25 60 C 28 70 27 80 23 87 L 15 87"/>
+      <path d="M 23 87 L 17 90 M 23 87 L 23 91 M 23 87 L 30 89"/>
+    `
+  },
+  {
+    name: 'Spinosaurus',
+    minT: 12,
+    maxT: 15,
+    desc: 'más grande que el T-Rex',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 30 44 C 32 20 42 10 56 14 C 68 18 74 32 74 44"/>
+      <path d="M 36 32 L 36 44 M 42 22 L 42 44 M 48 15 L 48 44 M 54 14 L 54 44 M 60 17 L 60 44 M 66 25 L 66 44 M 71 36 L 71 44"/>
+      <path d="M 74 38 C 80 36 90 36 100 37 C 103 39 101 41 95 42 L 78 43"/>
+      <circle cx="78" cy="34" r="2" fill="none"/>
+      <circle cx="78" cy="34" r="0.8" fill="currentColor" stroke="none"/>
+      <path d="M 98 37 L 97 40 M 93 36 L 92 40 M 88 36 L 87 40 M 83 36 L 82 40"/>
+      <path d="M 95 42 L 94 39 M 90 42 L 89 39 M 85 42 L 84 39"/>
+      <path d="M 30 44 C 22 46 14 48 7 50 C 3 51 1 52 1 52"/>
+      <path d="M 1 52 C 4 56 10 58 18 56 C 26 54 32 51 36 48"/>
+      <path d="M 78 43 C 70 50 62 56 54 60 C 46 63 38 64 30 62 C 22 60 14 56 8 52 C 4 50 2 51 1 52"/>
+      <path d="M 58 56 C 62 63 66 70 70 76"/>
+      <path d="M 70 76 L 74 78 M 70 76 L 73 73 M 70 76 L 71 80"/>
+      <path d="M 40 62 C 43 70 43 78 40 85 L 33 85"/>
+      <path d="M 33 85 L 27 87 M 33 85 L 33 88 M 33 85 L 40 87"/>
+      <path d="M 28 64 L 27 82 L 21 82"/>
+    `
+  },
+  {
+    name: 'Brachiosaurus',
+    minT: 15,
+    maxT: 18,
+    desc: 'cuello hasta las nubes',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 82 10 C 85 7 90 7 92 10 C 93 13 90 15 87 15"/>
+      <ellipse cx="90" cy="10" rx="1.5" ry="0.8" fill="currentColor" stroke="none"/>
+      <circle cx="84" cy="11" r="1.5" fill="none"/>
+      <circle cx="84" cy="11" r="0.6" fill="currentColor" stroke="none"/>
+      <path d="M 82 10 C 78 18 73 28 68 36 C 63 44 58 48 52 51"/>
+      <path d="M 87 15 C 82 24 76 34 70 42 C 64 50 58 54 52 57"/>
+      <path d="M 52 51 C 44 52 36 54 28 57 C 20 60 14 63 8 68 C 4 71 2 73 1 74"/>
+      <path d="M 1 74 C 5 74 10 72 16 70"/>
+      <path d="M 52 57 C 44 60 36 62 28 64 C 20 66 14 70 8 73 C 4 75 2 75 1 74"/>
+      <path d="M 52 54 C 54 65 54 76 52 87 L 44 87"/>
+      <path d="M 44 87 L 38 89 M 44 87 L 44 90 M 44 87 L 51 89"/>
+      <path d="M 56 55 L 56 83 L 51 83"/>
+      <path d="M 24 64 C 25 73 24 82 21 88 L 14 88"/>
+      <path d="M 14 88 L 9 90 M 14 88 L 14 91 M 14 88 L 20 90"/>
+      <path d="M 16 68 L 15 85 L 10 85"/>
+    `
+  },
+  {
+    name: 'Diplodocus',
+    minT: 18,
+    maxT: 22,
+    desc: 'cola de látigo gigante',
+    viewBox: '0 0 120 90',
+    paths: `
+      <path d="M 108 38 C 110 36 113 36 114 38 C 114 40 111 41 108 41"/>
+      <circle cx="109" cy="37" r="1.3" fill="none"/>
+      <circle cx="109" cy="37" r="0.5" fill="currentColor" stroke="none"/>
+      <path d="M 108 38 C 97 38 85 40 75 44 C 65 46 55 47 44 48"/>
+      <path d="M 108 41 C 97 43 85 46 75 50 C 65 52 55 53 44 54"/>
+      <path d="M 80 44 L 80 42 M 72 46 L 72 44 M 64 47 L 64 45 M 56 48 L 56 46 M 48 49 L 48 47"/>
+      <path d="M 44 48 C 36 49 28 51 20 53 C 12 55 7 54 3 51 C 1 49 1 47 1 45"/>
+      <path d="M 1 45 C 2 41 5 39 9 40 C 13 41 16 44 17 47"/>
+      <path d="M 44 54 C 36 56 28 58 20 59 C 12 60 7 59 3 55 C 1 53 1 50 1 48"/>
+      <path d="M 52 52 C 53 61 53 70 50 79 L 43 79"/>
+      <path d="M 43 79 L 37 81 M 43 79 L 43 82 M 43 79 L 50 81"/>
+      <path d="M 56 54 L 56 75 L 51 75"/>
+      <path d="M 30 56 C 31 65 30 74 27 80 L 20 80"/>
+      <path d="M 20 80 L 15 82 M 20 80 L 20 83 M 20 80 L 26 82"/>
+      <path d="M 22 59 L 21 76 L 16 76"/>
+    `
+  },
+  {
+    name: 'Apatosaurus',
+    minT: 22,
+    maxT: 26,
+    desc: 'coloso del Jurásico',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 90 34 C 93 32 97 32 97 35 C 97 37 94 38 91 38"/>
+      <circle cx="91" cy="33" r="1.3" fill="none"/>
+      <circle cx="91" cy="33" r="0.5" fill="currentColor" stroke="none"/>
+      <path d="M 90 34 C 81 35 72 38 64 43 C 56 48 50 52 44 54"/>
+      <path d="M 91 38 C 82 42 72 48 64 54 C 56 59 50 63 44 65"/>
+      <path d="M 76 36 L 76 32 C 78 30 80 32 78 35 M 68 40 L 68 36 C 70 34 72 36 70 39 M 60 44 L 60 40 C 62 38 64 40 62 43"/>
+      <path d="M 44 54 C 36 55 27 57 18 59 C 11 60 5 59 2 56 C 1 54 1 52 1 50"/>
+      <path d="M 1 50 C 2 46 5 44 9 45 C 13 46 16 49 17 52"/>
+      <path d="M 44 65 C 36 67 27 68 18 68 C 11 68 5 66 2 62 C 1 60 1 57 1 55"/>
+      <path d="M 46 60 C 48 70 48 80 45 88 L 37 88"/>
+      <path d="M 37 88 L 31 90 M 37 88 L 37 91 M 37 88 L 45 90"/>
+      <path d="M 52 62 L 52 84 L 47 84"/>
+      <path d="M 24 64 C 25 73 24 82 21 88 L 16 88"/>
+      <path d="M 14 88 L 8 90 M 14 88 L 14 91 M 14 88 L 21 90"/>
+      <path d="M 16 68 L 15 84 L 10 84"/>
+    `
+  },
+  {
+    name: 'Argentinosaurus',
+    minT: 26,
+    maxT: 100,
+    desc: 'el dinosaurio más pesado',
+    viewBox: '0 0 110 90',
+    paths: `
+      <path d="M 88 24 C 92 22 97 22 98 25 C 98 27 95 28 92 28"/>
+      <circle cx="90" cy="23" r="1.5" fill="none"/>
+      <circle cx="90" cy="23" r="0.6" fill="currentColor" stroke="none"/>
+      <path d="M 88 24 C 81 28 74 34 68 42 C 62 48 56 52 50 55"/>
+      <path d="M 92 28 C 85 34 78 42 72 50 C 65 57 58 61 50 65"/>
+      <path d="M 50 55 C 40 56 30 58 20 60 C 12 62 6 61 2 57 C 1 55 1 53 1 50"/>
+      <path d="M 1 50 C 2 46 5 44 10 44 C 14 44 17 48 18 51"/>
+      <path d="M 50 65 C 40 67 30 68 20 70 C 12 71 6 69 2 65 C 1 63 1 60 1 57"/>
+      <path d="M 50 56 C 52 53 55 53 56 56 M 42 58 C 44 55 47 55 48 58 M 34 59 C 36 56 39 57 40 59"/>
+      <path d="M 52 60 C 54 70 54 80 51 88 L 43 88"/>
+      <path d="M 43 88 L 36 90 M 43 88 L 43 92 M 43 88 L 51 90"/>
+      <path d="M 58 62 L 58 84 L 53 84"/>
+      <path d="M 22 66 C 23 76 22 85 19 89 L 11 89"/>
+      <path d="M 11 89 L 5 91 M 11 89 L 11 92 M 11 89 L 18 91"/>
+      <path d="M 14 70 L 13 85 L 8 85"/>
+    `
+  }
 ];
 
 function getDinoForKg(totalKg) {
@@ -2241,6 +2574,22 @@ function getDinoForKg(totalKg) {
   const dino = DINO_DB.find(d => totalT >= d.minT && totalT < d.maxT)
     || DINO_DB[DINO_DB.length - 1];
   return dino;
+}
+
+function getDinoSvg(dino, strokeColor = '#ffffff', strokeWidth = 1.3) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${dino.viewBox || '0 0 110 90'}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${dino.paths}</svg>`;
+}
+
+function drawSvgOnCanvas(ctx, svgString, x, y, width, height) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, x, y, width, height);
+      resolve();
+    };
+    img.onerror = () => resolve();
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2491,20 +2840,26 @@ async function exportDayCardToPNG(dateStr) {
     cy = gOY + 70;
   }
 
-  // ── 7. SECCIÓN DEL DINOSAURIO (Adaptada en tamaño y centrada) ─────────────
+  // ── 7. SECCIÓN DEL DINOSAURIO (Icono SVG realista de trazo fino) ──────────
   c.fillStyle = 'rgba(255,255,255,0.6)';
   c.font = '600 28px "Plus Jakarta Sans", sans-serif';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
   c.fillText('HOY PODRÍAS HABER MOVIDO UN...', W/2, cy);
-  cy += 70;
+  cy += 30;
 
-  // Emoji del dinosaurio
-  c.font = '84px serif';
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillText(dino.emoji, W/2, cy);
-  cy += 65;
+  // Dibujar el icono vectorial realista del dinosaurio en el Canvas
+  if (dino.paths) {
+    const dinoSvgString = getDinoSvg(dino, '#ffffff', 1.4);
+    const iconW = 200;
+    const iconH = 140;
+    await drawSvgOnCanvas(c, dinoSvgString, W/2 - iconW/2, cy, iconW, iconH);
+    cy += iconH + 35;
+  } else {
+    c.font = '84px serif';
+    c.fillText(dino.emoji || '🦕', W/2, cy + 40);
+    cy += 90;
+  }
 
   // Nombre del dinosaurio: cálculo dinámico del tamaño de fuente para que NUNCA se corte
   const maxDinoTextW = 760;
