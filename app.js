@@ -126,6 +126,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Recuperar sesión en curso si la app se cerró a medias
   const hadDraft = restoreSessionDraft();
   if (hadDraft) {
+    if (currentSession.tag) {
+      const tagInput = document.getElementById('workout-tag');
+      if (tagInput) tagInput.value = currentSession.tag;
+    }
+    if (currentSession.date) {
+      const dateInput = document.getElementById('workout-date');
+      if (dateInput) dateInput.value = currentSession.date;
+    }
+    updateEditWorkoutBanner();
     renderSessionExercises();
     showToast('✅ Sesión recuperada automáticamente');
   }
@@ -819,13 +828,22 @@ function renderSelectedDayDetails(dateStr) {
     return `
       <div class="bg-[#180e2a] border border-[#2f174e] rounded-2xl p-3.5 shadow space-y-2">
         <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <span class="p-1 rounded-lg bg-purple-500/20 text-purple-300">
+          <div class="flex items-center space-x-2 min-w-0 pr-2">
+            <span class="p-1 rounded-lg bg-purple-500/20 text-purple-300 flex-shrink-0">
               <i data-lucide="check" class="w-3.5 h-3.5"></i>
             </span>
-            <h4 class="text-xs font-bold text-white">${w.tag}</h4>
+            <h4 class="text-xs font-bold text-white truncate">${w.tag}</h4>
           </div>
-          <span class="text-xs font-bold text-fuchsia-400">${totalVol.toLocaleString()} kg</span>
+          <div class="flex items-center space-x-1.5 flex-shrink-0">
+            <span class="text-xs font-bold text-fuchsia-400 mr-1">${totalVol.toLocaleString()} kg</span>
+            <button onclick="editWorkout('${w.id}')" class="px-2 py-1 rounded-xl glass-pill hover:bg-purple-600/30 text-fuchsia-300 hover:text-white text-[11px] font-bold flex items-center space-x-1 transition" title="Editar este entrenamiento">
+              <i data-lucide="pencil" class="w-3 h-3 text-fuchsia-400"></i>
+              <span>Editar</span>
+            </button>
+            <button onclick="deleteWorkoutEntry('${w.id}')" class="p-1 text-purple-400/50 hover:text-rose-400 transition" title="Eliminar entrenamiento">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
         </div>
         
         <div class="text-[11px] text-purple-200/70 space-y-1.5 pt-1.5 border-t border-[#2a1445]">
@@ -1131,20 +1149,25 @@ function saveCurrentWorkout() {
   }
 
   const workoutDate = dateInput.value || new Date().toISOString().split('T')[0];
+  const isEditing = Boolean(currentSession.id);
+  const workoutId = currentSession.id || ('w_' + Date.now());
 
   const workoutRecord = {
-    id: 'w_' + Date.now(),
+    id: workoutId,
     date: workoutDate,
     tag: tagInput.value.trim() || 'Entrenamiento General',
     exercises: JSON.parse(JSON.stringify(currentSession.exercises))
   };
 
   DB.saveWorkout(workoutRecord);
-  showToast('¡Entrenamiento registrado con éxito!');
+  showToast(isEditing ? '¡Entrenamiento actualizado y rectificado!' : '¡Entrenamiento registrado con éxito!');
 
-  tagInput.value = '';
+  currentSession.id = null;
   currentSession.exercises = [];
+  currentSession.tag = '';
+  tagInput.value = '';
   clearSessionDraft();
+  updateEditWorkoutBanner();
   renderSessionExercises();
   renderHistory();
   renderPRs();
@@ -1153,6 +1176,81 @@ function saveCurrentWorkout() {
   calendarSelectedDate = workoutDate;
   renderCalendar();
   updateHomeProgressChart();
+}
+
+function editWorkout(workoutId) {
+  const workouts = DB.getWorkouts();
+  const workout = workouts.find(w => w.id === workoutId);
+  if (!workout) {
+    showToast('No se encontró el entrenamiento');
+    return;
+  }
+
+  if (currentSession.exercises.length > 0 && currentSession.id !== workoutId) {
+    if (!confirm('Hay un entrenamiento o borrador en curso sin guardar. ¿Deseas descartarlo para editar este entrenamiento?')) {
+      return;
+    }
+  }
+
+  currentSession.id = workout.id;
+  currentSession.date = workout.date || new Date().toISOString().split('T')[0];
+  currentSession.tag = workout.tag || '';
+  currentSession.exercises = JSON.parse(JSON.stringify(workout.exercises || []));
+
+  const dateInput = document.getElementById('workout-date');
+  const tagInput = document.getElementById('workout-tag');
+  if (dateInput) dateInput.value = currentSession.date;
+  if (tagInput) tagInput.value = currentSession.tag;
+
+  openExerciseIndices.clear();
+  currentSession.exercises.forEach((_, idx) => openExerciseIndices.add(idx));
+
+  updateEditWorkoutBanner();
+  autosaveSession();
+  renderSessionExercises();
+
+  // Cambiar a la pestaña de entrenar
+  const workoutNavBtn = document.querySelector('.nav-item[data-target="tab-workout"]');
+  if (workoutNavBtn) workoutNavBtn.click();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(`✏️ Editando: ${workout.tag || 'Entrenamiento'}`);
+}
+
+function cancelEditWorkout() {
+  if (!confirm('¿Deseas cancelar la edición? Se perderán los cambios no guardados.')) {
+    return;
+  }
+  currentSession.id = null;
+  currentSession.exercises = [];
+  currentSession.tag = '';
+  currentSession.date = new Date().toISOString().split('T')[0];
+
+  const tagInput = document.getElementById('workout-tag');
+  if (tagInput) tagInput.value = '';
+  const dateInput = document.getElementById('workout-date');
+  if (dateInput) dateInput.value = currentSession.date;
+
+  clearSessionDraft();
+  updateEditWorkoutBanner();
+  renderSessionExercises();
+  showToast('Edición cancelada');
+}
+
+function updateEditWorkoutBanner() {
+  const banner = document.getElementById('editing-workout-banner');
+  const subText = document.getElementById('editing-workout-sub');
+  const saveBtnText = document.getElementById('btn-save-workout-text');
+
+  if (currentSession && currentSession.id) {
+    if (banner) banner.classList.remove('hidden');
+    if (subText) subText.innerText = `Rectificando sesión del ${currentSession.date || ''} (${currentSession.tag || 'Sin título'})`;
+    if (saveBtnText) saveBtnText.innerText = 'Guardar Rectificación / Cambios';
+  } else {
+    if (banner) banner.classList.add('hidden');
+    if (saveBtnText) saveBtnText.innerText = 'Guardar Sesión Completada';
+  }
+  if (window.lucide) lucide.createIcons();
 }
 
 // -------------------------------------------------------------
@@ -1283,9 +1381,13 @@ function renderHistory(filterText = '') {
           }).join('')}
         </div>
 
-        <div class="flex justify-end pt-1">
-          <button onclick="deleteWorkoutEntry('${w.id}')" class="text-[10px] text-rose-400 hover:text-rose-300 flex items-center space-x-1">
-            <i data-lucide="trash" class="w-3 h-3"></i>
+        <div class="flex items-center justify-end space-x-2 pt-1 border-t border-[#23123b]/60">
+          <button onclick="editWorkout('${w.id}')" class="px-2.5 py-1 rounded-xl glass-pill hover:bg-purple-600/30 text-fuchsia-300 hover:text-white text-[11px] font-bold flex items-center space-x-1 transition">
+            <i data-lucide="pencil" class="w-3 h-3 text-fuchsia-400"></i>
+            <span>Editar</span>
+          </button>
+          <button onclick="deleteWorkoutEntry('${w.id}')" class="px-2 py-1 text-[11px] text-rose-400/80 hover:text-rose-300 flex items-center space-x-1 transition">
+            <i data-lucide="trash-2" class="w-3 h-3"></i>
             <span>Eliminar</span>
           </button>
         </div>
@@ -1299,6 +1401,16 @@ function renderHistory(filterText = '') {
 function deleteWorkoutEntry(id) {
   if (confirm('¿Seguro que deseas eliminar esta sesión de entrenamiento?')) {
     DB.deleteWorkout(id);
+    if (currentSession && currentSession.id === id) {
+      currentSession.id = null;
+      currentSession.exercises = [];
+      currentSession.tag = '';
+      const tagInput = document.getElementById('workout-tag');
+      if (tagInput) tagInput.value = '';
+      clearSessionDraft();
+      updateEditWorkoutBanner();
+      renderSessionExercises();
+    }
     renderHistory();
     renderPRs();
     updateChart();
@@ -1999,6 +2111,10 @@ function startRestTimer(seconds) {
 // -------------------------------------------------------------
 function setupEventListeners() {
   document.getElementById('btn-save-workout').addEventListener('click', saveCurrentWorkout);
+  const btnCancelEdit = document.getElementById('btn-cancel-edit-workout');
+  if (btnCancelEdit) {
+    btnCancelEdit.addEventListener('click', cancelEditWorkout);
+  }
 
   document.getElementById('btn-open-exercise-picker').addEventListener('click', openExercisePicker);
   document.getElementById('btn-close-exercise-picker').addEventListener('click', () => {

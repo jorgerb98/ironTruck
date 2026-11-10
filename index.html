@@ -215,6 +215,22 @@
         </button>
       </div>
 
+      <!-- Editing Workout Indicator Banner -->
+      <div id="editing-workout-banner" class="hidden bg-fuchsia-950/40 border border-fuchsia-500/40 rounded-2xl p-3 flex items-center justify-between shadow-lg">
+        <div class="flex items-center space-x-2.5">
+          <span class="p-1.5 rounded-xl bg-fuchsia-500/20 text-fuchsia-400">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+          </span>
+          <div>
+            <p class="text-xs font-bold text-white">Modo Edición Activo</p>
+            <p id="editing-workout-sub" class="text-[10px] text-fuchsia-300/80">Rectificando entrenamiento guardado</p>
+          </div>
+        </div>
+        <button id="btn-cancel-edit-workout" class="px-2.5 py-1.5 rounded-xl bg-purple-900/60 hover:bg-purple-800 text-purple-200 hover:text-white text-[11px] font-bold border border-purple-500/30 transition">
+          Cancelar
+        </button>
+      </div>
+
       <!-- Quick Session Details Form -->
       <div class="glass-card rounded-3xl p-4 shadow-xl space-y-3.5">
         <!-- Selector de Rutinas Plantilla Guardadas -->
@@ -261,7 +277,7 @@
 
       <button id="btn-save-workout" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:opacity-95 text-white font-black shadow-xl shadow-purple-950/60 flex items-center justify-center space-x-2 transition active:scale-[0.98]">
         <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-        <span class="tracking-wide">Guardar Sesión Completada</span>
+        <span id="btn-save-workout-text" class="tracking-wide">Guardar Sesión Completada</span>
       </button>
     </section>
 

@@ -243,7 +243,12 @@ const DB = {
 
   saveWorkout(workout) {
     const list = this.getWorkouts();
-    list.unshift(workout);
+    const idx = list.findIndex(w => w.id === workout.id);
+    if (idx !== -1) {
+      list[idx] = workout;
+    } else {
+      list.unshift(workout);
+    }
     localStorage.setItem('it_workouts', JSON.stringify(list));
     return workout;
   },
